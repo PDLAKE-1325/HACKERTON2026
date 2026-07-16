@@ -281,8 +281,8 @@ MonoBehaviour:
   attackKnockback: 6
   markDuration: 20
   markerPrefab: {fileID: 302965178560278234, guid: 40d947b15450671409b0977cbe256604, type: 3}
-  finishableMarkSprite: {fileID: -3884330180731820946, guid: e7397ffb666034e4cb34180745f26592, type: 2}
-  unavailableMarkSprite: {fileID: -2894423884803931208, guid: 29c63ec6640d1964eaad5dd24d533f6f, type: 2}
+  finishableMarkSprite: {fileID: 21300000, guid: 3ef15be4f0ff64c6b8ec6d51828fca13, type: 3}
+  unavailableMarkSprite: {fileID: 21300000, guid: c8f538f5dc1f843e5b1daf14c05d6ec0, type: 3}
   markerLocalOffset: {x: 0, y: 1.5, z: 0}
   finisherDamageFallback: 999
 --- !u!212 &1926488988700503943
