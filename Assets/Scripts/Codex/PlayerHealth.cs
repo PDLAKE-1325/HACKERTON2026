@@ -32,7 +32,6 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
 
     private float currentHealth;
     private bool isDead;
-    private bool canRestart;
     private Tween deathTween;
 
     public float CurrentHealth => currentHealth;
@@ -59,8 +58,13 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
 
     private void Update()
     {
-        if (canRestart && Input.GetKeyDown(restartKey))
+        if (isDead &&
+            (Input.GetKeyDown(restartKey) ||
+             Input.GetKeyDown(KeyCode.Space) ||
+             Input.GetKeyDown(KeyCode.Return)))
+        {
             RestartCurrentScene();
+        }
     }
 
     public void TakeHit(HitData hitData)
@@ -136,24 +140,23 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
         {
             Text gameOverText = gameOverSprite.GetComponent<Text>();
             if (gameOverText != null)
-                gameOverText.text = $"GAME OVER\n\n[{restartKey}] 다시 시작";
+                gameOverText.text = $"GAME OVER\n\n[{restartKey} / SPACE / ENTER] 다시 시작";
             gameOverSprite.SetActive(true);
         }
 
         if (CameraManager.Instance != null)
             CameraManager.Instance.Shake(gameOverShakeIntensity, gameOverShakeDuration);
-
-        canRestart = true;
     }
 
     private void RestartCurrentScene()
     {
-        canRestart = false;
         deathTween?.Kill();
         Time.timeScale = 1f;
 
         if (InputManager.Instance != null)
             InputManager.Instance.SetInputAllowed(true);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.SetMuffled(false);
 
         Scene currentScene = SceneManager.GetActiveScene();
         if (currentScene.buildIndex >= 0)
