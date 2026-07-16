@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("References")]
     [SerializeField] private Rigidbody2D body;
     [SerializeField] private Collider2D bodyCollider;
+    [SerializeField] private Animator animator;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private Transform wallCheckOrigin;
 
@@ -33,12 +34,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float dashDuration = 0.16f;
     [SerializeField] private float dashCooldown = 0.8f;
 
+    [Header("Animation")]
+    [SerializeField] private string moveBool = "Move";
+
     private float moveInput;
     private float defaultGravityScale;
     private float wallGripRemaining;
     private float nextDashTime;
     private float nextWallGripTime;
     private float wallJumpControlLockedUntil;
+    private float knockbackControlLockedUntil;
     private int facingDirection = 1;
     private int grippedWallSide;
     private bool isGrounded;
@@ -54,6 +59,9 @@ public class PlayerMovement : MonoBehaviour
         if (bodyCollider == null)
             bodyCollider = GetComponent<Collider2D>();
 
+        if (animator == null)
+            animator = GetComponent<Animator>();
+
         if (body != null)
             defaultGravityScale = body.gravityScale;
     }
@@ -64,6 +72,11 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         UpdateEnvironmentState();
+
+        UpdateMoveAnimation();
+
+        if (Time.time < knockbackControlLockedUntil)
+            return;
 
         if (isDashing)
             return;
@@ -145,6 +158,7 @@ public class PlayerMovement : MonoBehaviour
         moveInput = 0f;
         isWallGripping = false;
         wallJumpControlLockedUntil = 0f;
+        knockbackControlLockedUntil = 0f;
 
         if (dashCoroutine != null)
         {
@@ -158,6 +172,27 @@ public class PlayerMovement : MonoBehaviour
             body.gravityScale = defaultGravityScale;
             body.linearVelocity = Vector2.zero;
         }
+
+        SetMoveAnimation(false);
+    }
+
+    public void ApplyKnockback(Vector2 velocity, float controlLockDuration)
+    {
+        if (body == null)
+            return;
+
+        if (dashCoroutine != null)
+        {
+            StopCoroutine(dashCoroutine);
+            dashCoroutine = null;
+        }
+
+        isDashing = false;
+        isWallGripping = false;
+        body.gravityScale = defaultGravityScale;
+        knockbackControlLockedUntil = Time.time + Mathf.Max(0f, controlLockDuration);
+        body.linearVelocity = velocity;
+        SetMoveAnimation(false);
     }
 
     private void UpdateEnvironmentState()
@@ -167,6 +202,22 @@ public class PlayerMovement : MonoBehaviour
 
         if (isGrounded && isWallGripping)
             ReleaseWall(false);
+    }
+
+    private void UpdateMoveAnimation()
+    {
+        bool isMoving = isGrounded &&
+            !isDashing &&
+            !isWallGripping &&
+            Time.time >= knockbackControlLockedUntil &&
+            Mathf.Abs(body.linearVelocity.x) > 0.1f;
+        SetMoveAnimation(isMoving);
+    }
+
+    private void SetMoveAnimation(bool value)
+    {
+        if (animator != null && !string.IsNullOrEmpty(moveBool))
+            animator.SetBool(moveBool, value);
     }
 
     private void TryBeginWallGrip()

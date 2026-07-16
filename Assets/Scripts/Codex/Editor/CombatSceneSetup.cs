@@ -72,6 +72,7 @@ public static class CombatSceneSetup
         {
             { "body", player.GetComponent<Rigidbody2D>() },
             { "bodyCollider", player.GetComponent<Collider2D>() },
+            { "animator", player.GetComponent<Animator>() },
             { "groundCheck", Require("GroundCheck").transform },
             { "wallCheckOrigin", Require("WallCheckOrigin").transform }
         });
@@ -191,6 +192,26 @@ public static class CombatSceneSetup
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
         Debug.Log("[CombatSceneSetup] SkillOverlay configured as black on StencilMask layer.");
+    }
+
+    [MenuItem("Tools/Codex/Configure Player Move Animation")]
+    public static void ConfigurePlayerMoveAnimation()
+    {
+        if (EditorSceneManager.GetActiveScene().name != "Combat")
+            throw new InvalidOperationException("Combat scene must be active.");
+
+        GameObject player = Require("Player");
+        ConfigurePlayerAnimations(player);
+        SetObjectReferences(player.GetComponent<PlayerMovement>(), new Dictionary<string, UnityEngine.Object>
+        {
+            { "animator", player.GetComponent<Animator>() }
+        });
+
+        EditorUtility.SetDirty(player);
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveOpenScenes();
+        AssetDatabase.SaveAssets();
+        Debug.Log("[CombatSceneSetup] Player Move animation configured.");
     }
 
     private static void ConfigurePhysics(GameObject player, GameObject enemy, PhysicsMaterial2D material)
@@ -396,30 +417,8 @@ public static class CombatSceneSetup
 
     private static void ConfigureAnimations(GameObject player, GameObject enemy)
     {
-        EnsureAnimationClock(player);
+        ConfigurePlayerAnimations(player);
         EnsureAnimationClock(enemy);
-
-        AnimationClip playerIdle = CreateClip("PlayerIdle", 0.2f, null, true);
-        AnimationClip playerMelee = CreateClip("PlayerMelee", 0.24f, new[]
-        {
-            new AnimationEvent { time = 0.06f, functionName = "EnableAttackHitbox" },
-            new AnimationEvent { time = 0.16f, functionName = "DisableAttackHitbox" }
-        }, false);
-        AnimationClip playerShoot = CreateClip("PlayerShoot", 0.2f, null, false);
-        AnimationClip playerHit = CreateClip("PlayerHit", 0.18f, null, false);
-        AnimationClip playerDeath = CreateClip("PlayerDeath", 0.4f, null, false);
-
-        AnimatorController playerController = CreateController(
-            "PlayerCombat",
-            playerIdle,
-            new[]
-            {
-                new TriggerState("Melee", playerMelee, true),
-                new TriggerState("Shoot", playerShoot, true),
-                new TriggerState("Hit", playerHit, true),
-                new TriggerState("Death", playerDeath, false)
-            });
-        player.GetComponent<Animator>().runtimeAnimatorController = playerController;
 
         AnimationClip enemyIdle = CreateClip("EnemyIdle", 0.2f, null, true);
         AnimationClip enemyAttack = CreateClip("EnemyAttack", 0.3f, new[]
@@ -440,6 +439,59 @@ public static class CombatSceneSetup
                 new TriggerState("Death", enemyDeath, false)
             });
         enemy.GetComponent<Animator>().runtimeAnimatorController = enemyController;
+    }
+
+    private static void ConfigurePlayerAnimations(GameObject player)
+    {
+        EnsureAnimationClock(player);
+
+        AnimationClip playerIdle = CreateClip("PlayerIdle", 0.2f, null, true);
+        AnimationClip playerMove = CreateClip("PlayerMove", 0.3f, null, true);
+        AnimationClip playerMelee = CreateClip("PlayerMelee", 0.24f, new[]
+        {
+            new AnimationEvent { time = 0.06f, functionName = "EnableAttackHitbox" },
+            new AnimationEvent { time = 0.16f, functionName = "DisableAttackHitbox" }
+        }, false);
+        AnimationClip playerShoot = CreateClip("PlayerShoot", 0.2f, null, false);
+        AnimationClip playerHit = CreateClip("PlayerHit", 0.18f, null, false);
+        AnimationClip playerDeath = CreateClip("PlayerDeath", 0.4f, null, false);
+
+        AnimatorController playerController = CreateController(
+            "PlayerCombat",
+            playerIdle,
+            new[]
+            {
+                new TriggerState("Melee", playerMelee, true),
+                new TriggerState("Shoot", playerShoot, true),
+                new TriggerState("Hit", playerHit, true),
+                new TriggerState("Death", playerDeath, false)
+            });
+        AddMoveState(playerController, playerMove);
+        player.GetComponent<Animator>().runtimeAnimatorController = playerController;
+    }
+
+    private static void AddMoveState(AnimatorController controller, AnimationClip moveClip)
+    {
+        controller.AddParameter("Move", AnimatorControllerParameterType.Bool);
+
+        AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
+        AnimatorState idle = stateMachine.states
+            .Select(childState => childState.state)
+            .First(state => state.name == "Idle");
+        AnimatorState move = stateMachine.AddState("Move");
+        move.motion = moveClip;
+
+        AnimatorStateTransition startMoving = idle.AddTransition(move);
+        startMoving.hasExitTime = false;
+        startMoving.duration = 0f;
+        startMoving.AddCondition(AnimatorConditionMode.If, 0f, "Move");
+
+        AnimatorStateTransition stopMoving = move.AddTransition(idle);
+        stopMoving.hasExitTime = false;
+        stopMoving.duration = 0f;
+        stopMoving.AddCondition(AnimatorConditionMode.IfNot, 0f, "Move");
+
+        EditorUtility.SetDirty(controller);
     }
 
     private static AnimationClip CreateClip(

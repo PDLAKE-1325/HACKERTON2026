@@ -2000,6 +2000,9 @@ MonoBehaviour:
   maxHealth: 100
   hitTrigger: Hit
   deathTrigger: Death
+  knockbackHorizontalMultiplier: 0.55
+  knockbackVerticalMultiplier: 0.2
+  knockbackControlLockDuration: 0.14
   deathSlowDuration: 0.8
   gameOverShakeIntensity: 2.5
   gameOverShakeDuration: 0.3
@@ -2066,6 +2069,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   body: {fileID: 1200175005}
   bodyCollider: {fileID: 1200175004}
+  animator: {fileID: 1200175003}
   groundCheck: {fileID: 1640385622}
   wallCheckOrigin: {fileID: 641731144}
   moveSpeed: 9
@@ -2088,6 +2092,7 @@ MonoBehaviour:
   dashSpeed: 20
   dashDuration: 0.16
   dashCooldown: 0.8
+  moveBool: Move
 --- !u!95 &1200175003
 Animator:
   serializedVersion: 7
