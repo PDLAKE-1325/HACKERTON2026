@@ -138,8 +138,42 @@ public class PlayerSkill : MonoBehaviour
         if (CameraManager.Instance != null)
             CameraManager.Instance.Shake(hitShakeIntensity, hitShakeDuration);
 
-        if (!killedTarget || !hadMark)
+        bool canContinue = killedTarget &&
+            hadMark &&
+            HasLivingEnemyInView(cameraToUse, enemyComponent);
+        if (!canContinue)
             FinishAndStartCooldown();
+    }
+
+    private bool HasLivingEnemyInView(Camera cameraToUse, Component defeatedEnemy)
+    {
+        float targetDepth = Mathf.Abs(cameraToUse.transform.position.z - transform.position.z);
+        Vector3 bottomLeft = cameraToUse.ViewportToWorldPoint(new Vector3(0f, 0f, targetDepth));
+        Vector3 topRight = cameraToUse.ViewportToWorldPoint(new Vector3(1f, 1f, targetDepth));
+        Vector2 center = (bottomLeft + topRight) * 0.5f;
+        Vector2 size = new Vector2(
+            Mathf.Abs(topRight.x - bottomLeft.x),
+            Mathf.Abs(topRight.y - bottomLeft.y));
+
+        Collider2D[] candidates = Physics2D.OverlapBoxAll(center, size, 0f, enemyLayer);
+        foreach (Collider2D candidate in candidates)
+        {
+            IEnemy enemy = candidate.GetComponentInParent<IEnemy>();
+            IHealthTarget healthTarget = enemy as IHealthTarget;
+            Component enemyComponent = enemy as Component;
+            if (enemyComponent == null ||
+                enemyComponent == defeatedEnemy ||
+                healthTarget == null ||
+                healthTarget.IsDead ||
+                !enemyComponent.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private void TeleportAcross(Transform enemyTransform)
