@@ -24,6 +24,9 @@ public static class CombatSceneSetup
         GameObject canvasObject = Require("GameplayCanvas");
         GameObject vcamObject = Require("Gameplay VCam");
         Camera mainCamera = Require("Main Camera").GetComponent<Camera>();
+        ResonanceStack resonanceStack = player.GetComponent<ResonanceStack>();
+        if (resonanceStack == null)
+            resonanceStack = player.AddComponent<ResonanceStack>();
 
         PhysicsMaterial2D zeroFriction = CreateZeroFrictionMaterial();
         Sprite skillSprite = CreateColorSprite("SkillOverlay", new Color(0.1f, 0.8f, 1f, 0.45f));
@@ -31,6 +34,7 @@ public static class CombatSceneSetup
         Sprite unavailableSprite = CreateColorSprite("MarkUnavailable", new Color(1f, 0.2f, 0.2f, 1f));
         Sprite muzzleSprite = CreateColorSprite("MuzzleFlash", new Color(1f, 0.85f, 0.15f, 1f));
         Sprite hitSprite = CreateColorSprite("HitEffect", new Color(1f, 0.35f, 0.15f, 1f));
+        Sprite projectileSprite = CreateColorSprite("Projectile", new Color(0.15f, 0.9f, 1f, 1f));
 
         ConfigurePhysics(player, enemy, zeroFriction);
         ConfigureMaterials(player, enemy);
@@ -39,7 +43,9 @@ public static class CombatSceneSetup
         ConfigureVisuals(player, skillSprite);
         ConfigureAnimations(player, enemy);
 
-        LineRenderer trailPrefab = CreateTrailPrefab();
+        DeleteObsoleteHitscanAssets();
+        PlayerProjectile projectilePrefab = CreateProjectilePrefab(projectileSprite);
+        GameObject deathParticlePrefab = CreateDeathParticlePrefab();
         GameObject muzzlePrefab = CreateSpritePrefab("MuzzleFlash", muzzleSprite, 0.22f);
         GameObject hitPrefab = CreateSpritePrefab("HitEffect", hitSprite, 0.28f);
         SpriteRenderer markerPrefab = CreateMarkerPrefab(finishableSprite);
@@ -48,6 +54,12 @@ public static class CombatSceneSetup
         Slider playerSlider = Require("PlayerHealthBar").GetComponent<Slider>();
         TargetHealthBar targetHealthBar = Require("TargetHealthBar").GetComponent<TargetHealthBar>();
         SpriteRenderer skillOverlay = Require("SkillOverlay").GetComponent<SpriteRenderer>();
+        Text resonanceText = CreateOrConfigureResonanceText(canvasObject);
+
+        SetObjectReferences(resonanceStack, new Dictionary<string, UnityEngine.Object>
+        {
+            { "stackText", resonanceText }
+        });
 
         SetObjectReferences(player.GetComponent<PlayerController>(), new Dictionary<string, UnityEngine.Object>
         {
@@ -59,11 +71,13 @@ public static class CombatSceneSetup
         SetObjectReferences(player.GetComponent<PlayerMovement>(), new Dictionary<string, UnityEngine.Object>
         {
             { "body", player.GetComponent<Rigidbody2D>() },
+            { "bodyCollider", player.GetComponent<Collider2D>() },
             { "groundCheck", Require("GroundCheck").transform },
             { "wallCheckOrigin", Require("WallCheckOrigin").transform }
         });
         SetLayerMask(player.GetComponent<PlayerMovement>(), "groundLayer", LayerMask.GetMask("Ground"));
         SetLayerMask(player.GetComponent<PlayerMovement>(), "wallLayer", LayerMask.GetMask("Wall"));
+        SetFloat(player.GetComponent<PlayerMovement>(), "wallCheckDistance", 0.12f);
 
         SetObjectReferences(player.GetComponent<PlayerCombat>(), new Dictionary<string, UnityEngine.Object>
         {
@@ -72,7 +86,9 @@ public static class CombatSceneSetup
             { "muzzle", Require("Muzzle").transform },
             { "aimCamera", mainCamera },
             { "targetHealthBar", targetHealthBar },
-            { "bulletTrailPrefab", trailPrefab },
+            { "resonanceStack", resonanceStack },
+            { "projectilePrefab", projectilePrefab },
+            { "projectileImage", projectileSprite },
             { "muzzleFlashPrefab", muzzlePrefab },
             { "hitEffectPrefab", hitPrefab }
         });
@@ -82,9 +98,11 @@ public static class CombatSceneSetup
         SetObjectReferences(player.GetComponent<PlayerSkill>(), new Dictionary<string, UnityEngine.Object>
         {
             { "targetCamera", mainCamera },
-            { "skillSprite", skillOverlay }
+            { "skillSprite", skillOverlay },
+            { "resonanceStack", resonanceStack }
         });
         SetLayerMask(player.GetComponent<PlayerSkill>(), "enemyLayer", LayerMask.GetMask("Enemy"));
+        SetFloat(player.GetComponent<PlayerSkill>(), "finisherDamage", 30f);
 
         SetObjectReferences(player.GetComponent<PlayerHealth>(), new Dictionary<string, UnityEngine.Object>
         {
@@ -104,7 +122,8 @@ public static class CombatSceneSetup
             { "playerSkill", player.GetComponent<PlayerSkill>() },
             { "markerPrefab", markerPrefab },
             { "finishableMarkSprite", finishableSprite },
-            { "unavailableMarkSprite", unavailableSprite }
+            { "unavailableMarkSprite", unavailableSprite },
+            { "deathParticlePrefab", deathParticlePrefab }
         });
         SetLayerMask(enemy.GetComponent<EnemyBase>(), "groundLayer", LayerMask.GetMask("Ground"));
         SetLayerMask(enemy.GetComponent<EnemyBase>(), "playerLayer", LayerMask.GetMask("Player"));
@@ -139,7 +158,7 @@ public static class CombatSceneSetup
         ConfigureBody(player.GetComponent<Rigidbody2D>());
         ConfigureBody(enemy.GetComponent<Rigidbody2D>());
 
-        foreach (Collider2D collider in UnityEngine.Object.FindObjectsByType<Collider2D>(FindObjectsSortMode.None))
+        foreach (Collider2D collider in UnityEngine.Object.FindObjectsByType<Collider2D>())
         {
             if (collider.gameObject.layer == LayerMask.NameToLayer("Player") ||
                 collider.gameObject.layer == LayerMask.NameToLayer("Enemy") ||
@@ -243,6 +262,40 @@ public static class CombatSceneSetup
         fill.fillOrigin = 0;
         EditorUtility.SetDirty(slider);
         EditorUtility.SetDirty(fill);
+    }
+
+    private static Text CreateOrConfigureResonanceText(GameObject canvasObject)
+    {
+        GameObject textObject = Resources.FindObjectsOfTypeAll<GameObject>()
+            .FirstOrDefault(candidate =>
+                candidate.scene.IsValid() && candidate.name == "ResonanceStackText");
+
+        if (textObject == null)
+        {
+            textObject = new GameObject("ResonanceStackText", typeof(RectTransform), typeof(Text));
+            Undo.RegisterCreatedObjectUndo(textObject, "Create resonance stack UI");
+            textObject.transform.SetParent(canvasObject.transform, false);
+            textObject.layer = LayerMask.NameToLayer("UI");
+        }
+
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 0.5f);
+        rect.anchoredPosition = new Vector2(420f, -34f);
+        rect.sizeDelta = new Vector2(230f, 42f);
+
+        Text text = textObject.GetComponent<Text>();
+        text.text = "공명 x0";
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.fontSize = 28;
+        text.fontStyle = FontStyle.Bold;
+        text.alignment = TextAnchor.MiddleLeft;
+        text.color = new Color(0.2f, 0.9f, 1f, 1f);
+        text.raycastTarget = false;
+        EditorUtility.SetDirty(rect);
+        EditorUtility.SetDirty(text);
+        return text;
     }
 
     private static void ConfigureCamera(GameObject vcamObject, GameObject player)
@@ -484,34 +537,94 @@ public static class CombatSceneSetup
         return sprite;
     }
 
-    private static LineRenderer CreateTrailPrefab()
+    private static void DeleteObsoleteHitscanAssets()
     {
-        string materialPath = $"{GeneratedRoot}/TrailMaterial.mat";
+        AssetDatabase.DeleteAsset($"{GeneratedRoot}/BulletTrail.prefab");
+        AssetDatabase.DeleteAsset($"{GeneratedRoot}/TrailMaterial.mat");
+    }
+
+    private static PlayerProjectile CreateProjectilePrefab(Sprite sprite)
+    {
+        string path = $"{GeneratedRoot}/PlayerProjectile.prefab";
+        AssetDatabase.DeleteAsset(path);
+
+        GameObject temporary = new GameObject("PlayerProjectile");
+        SpriteRenderer renderer = temporary.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.sortingOrder = 30;
+
+        Rigidbody2D projectileBody = temporary.AddComponent<Rigidbody2D>();
+        projectileBody.bodyType = RigidbodyType2D.Kinematic;
+        projectileBody.gravityScale = 0f;
+        projectileBody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        projectileBody.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+        CircleCollider2D collider = temporary.AddComponent<CircleCollider2D>();
+        collider.isTrigger = true;
+        collider.radius = 0.3f;
+
+        PlayerProjectile projectile = temporary.AddComponent<PlayerProjectile>();
+        SetObjectReferences(projectile, new Dictionary<string, UnityEngine.Object>
+        {
+            { "body", projectileBody },
+            { "spriteRenderer", renderer }
+        });
+
+        temporary.transform.localScale = new Vector3(0.8f, 0.35f, 1f);
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temporary, path);
+        UnityEngine.Object.DestroyImmediate(temporary);
+        return prefab.GetComponent<PlayerProjectile>();
+    }
+
+    private static GameObject CreateDeathParticlePrefab()
+    {
+        string materialPath = $"{GeneratedRoot}/DeathParticleMaterial.mat";
         Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
         if (material == null)
         {
-            material = new Material(Shader.Find("Sprites/Default"));
-            material.color = new Color(1f, 0.85f, 0.2f, 1f);
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null)
+                shader = Shader.Find("Particles/Standard Unlit");
+            if (shader == null)
+                shader = Shader.Find("Sprites/Default");
+            material = new Material(shader);
+            material.color = new Color(1f, 0.25f, 0.1f, 1f);
             AssetDatabase.CreateAsset(material, materialPath);
         }
 
-        string prefabPath = $"{GeneratedRoot}/BulletTrail.prefab";
-        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-        if (prefab == null)
-        {
-            GameObject temporary = new GameObject("BulletTrail");
-            LineRenderer renderer = temporary.AddComponent<LineRenderer>();
-            renderer.useWorldSpace = true;
-            renderer.positionCount = 0;
-            renderer.widthMultiplier = 0.055f;
-            renderer.numCapVertices = 2;
-            renderer.sharedMaterial = material;
-            renderer.startColor = new Color(1f, 0.95f, 0.5f, 1f);
-            renderer.endColor = new Color(1f, 0.35f, 0.1f, 0f);
-            prefab = PrefabUtility.SaveAsPrefabAsset(temporary, prefabPath);
-            UnityEngine.Object.DestroyImmediate(temporary);
-        }
-        return prefab.GetComponent<LineRenderer>();
+        string path = $"{GeneratedRoot}/EnemyDeathBurst.prefab";
+        AssetDatabase.DeleteAsset(path);
+
+        GameObject temporary = new GameObject("EnemyDeathBurst");
+        ParticleSystem particle = temporary.AddComponent<ParticleSystem>();
+        ParticleSystem.MainModule main = particle.main;
+        main.duration = 0.55f;
+        main.loop = false;
+        main.startLifetime = 0.5f;
+        main.startSpeed = new ParticleSystem.MinMaxCurve(2.5f, 5f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.16f, 0.4f);
+        main.startColor = new ParticleSystem.MinMaxGradient(
+            new Color(1f, 0.2f, 0.08f, 1f),
+            new Color(1f, 0.85f, 0.15f, 1f));
+        main.maxParticles = 32;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.stopAction = ParticleSystemStopAction.Destroy;
+
+        ParticleSystem.EmissionModule emission = particle.emission;
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 24) });
+
+        ParticleSystem.ShapeModule shape = particle.shape;
+        shape.shapeType = ParticleSystemShapeType.Circle;
+        shape.radius = 0.2f;
+
+        ParticleSystemRenderer renderer = temporary.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = material;
+        renderer.sortingOrder = 40;
+
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temporary, path);
+        UnityEngine.Object.DestroyImmediate(temporary);
+        return prefab;
     }
 
     private static GameObject CreateSpritePrefab(string name, Sprite sprite, float scale)
@@ -619,6 +732,17 @@ public static class CombatSceneSetup
         if (property == null)
             throw new InvalidOperationException($"Missing layer property '{propertyName}' on {target.name}.");
         property.intValue = value;
+        serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(target);
+    }
+
+    private static void SetFloat(UnityEngine.Object target, string propertyName, float value)
+    {
+        SerializedObject serializedObject = new SerializedObject(target);
+        SerializedProperty property = serializedObject.FindProperty(propertyName);
+        if (property == null)
+            throw new InvalidOperationException($"Missing float property '{propertyName}' on {target.name}.");
+        property.floatValue = value;
         serializedObject.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(target);
     }

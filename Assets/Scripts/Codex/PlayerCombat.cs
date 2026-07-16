@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using DG.Tweening;
 using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
@@ -16,6 +15,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Transform muzzle;
     [SerializeField] private Camera aimCamera;
     [SerializeField] private TargetHealthBar targetHealthBar;
+    [SerializeField] private ResonanceStack resonanceStack;
 
     [Header("Enemy Layer")]
     [SerializeField] private LayerMask enemyLayer;
@@ -32,21 +32,21 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float meleeHitShakeIntensity = 1f;
     [SerializeField] private float meleeHitShakeDuration = 0.12f;
 
-    [Header("Ranged Hitscan")]
+    [Header("Ranged Projectile")]
     [SerializeField] private float rangedDamage = 12f;
     [SerializeField] private float rangedKnockback = 5f;
-    [SerializeField] private float rangedDistance = 30f;
     [SerializeField] private float rangedCooldown = 0.45f;
     [SerializeField] private string rangedTrigger = "Shoot";
+    [SerializeField] private PlayerProjectile projectilePrefab;
+    [SerializeField] private Sprite projectileImage;
+    [SerializeField] private float projectileSpeed = 18f;
+    [SerializeField] private float projectileLifetime = 2.5f;
     [SerializeField] private float fireShakeIntensity = 0.65f;
     [SerializeField] private float fireShakeDuration = 0.08f;
     [SerializeField] private float hitShakeIntensity = 1.2f;
     [SerializeField] private float hitShakeDuration = 0.12f;
 
     [Header("Ranged Visuals")]
-    [SerializeField] private LineRenderer bulletTrailPrefab;
-    [SerializeField] private float bulletTrailSpeed = 45f;
-    [SerializeField] private float trailRemainDuration = 0.05f;
     [SerializeField] private GameObject muzzleFlashPrefab;
     [SerializeField] private float muzzleFlashDuration = 0.12f;
     [SerializeField] private GameObject hitEffectPrefab;
@@ -103,35 +103,27 @@ public class PlayerCombat : MonoBehaviour
         Vector2 start = muzzle.position;
         Vector2 direction = ((Vector2)mouseWorld - start).normalized;
         if (direction.sqrMagnitude < 0.01f)
-            direction = transform.right;
-
-        RaycastHit2D hit = Physics2D.Raycast(start, direction, rangedDistance, rangedHitLayers);
-        Vector2 end = hit.collider != null ? hit.point : start + direction * rangedDistance;
+            direction = new Vector2(transform.localScale.x >= 0f ? 1f : -1f, 0f);
 
         SpawnMuzzleFlash();
-        SpawnBulletTrail(start, end);
         ShakeCamera(fireShakeIntensity, fireShakeDuration);
 
-        if (hit.collider == null)
+        if (projectilePrefab == null)
             return;
 
-        SpawnHitEffect(hit.point);
-
-        IDamageable damageable = hit.collider.GetComponentInParent<IDamageable>();
-        if (damageable == null)
-            return;
-
-        HitData hitData = new HitData
-        {
-            damage = rangedDamage,
-            knockbackForce = rangedKnockback,
-            sourcePosition = start,
-            applyMark = true
-        };
-
-        damageable.TakeHit(hitData);
-        ShowTargetHealth(damageable);
-        ShakeCamera(hitShakeIntensity, hitShakeDuration);
+        PlayerProjectile projectile = Instantiate(
+            projectilePrefab,
+            start,
+            Quaternion.identity);
+        projectile.Initialize(
+            this,
+            direction,
+            projectileSpeed,
+            rangedDamage,
+            rangedKnockback,
+            projectileLifetime,
+            rangedHitLayers,
+            projectileImage);
     }
 
     private void ScanMeleeHitbox()
@@ -168,6 +160,8 @@ public class PlayerCombat : MonoBehaviour
                 applyMark = false
             };
 
+            if (resonanceStack != null)
+                resonanceStack.AddFromMeleeHit();
             damageable.TakeHit(hitData);
             ShowTargetHealth(damageable);
             ShakeCamera(meleeHitShakeIntensity, meleeHitShakeDuration);
@@ -198,27 +192,12 @@ public class PlayerCombat : MonoBehaviour
         Destroy(effect, hitEffectDuration);
     }
 
-    private void SpawnBulletTrail(Vector2 start, Vector2 end)
+    public void HandleProjectileImpact(IDamageable damageable, Vector2 position)
     {
-        if (bulletTrailPrefab == null)
-            return;
-
-        LineRenderer trail = Instantiate(bulletTrailPrefab, start, Quaternion.identity);
-        trail.positionCount = 2;
-        trail.SetPosition(0, start);
-        trail.SetPosition(1, start);
-
-        float distance = Vector2.Distance(start, end);
-        float travelDuration = bulletTrailSpeed > 0f ? distance / bulletTrailSpeed : 0f;
-        DOVirtual.Float(0f, 1f, travelDuration, progress =>
-        {
-            if (trail != null)
-                trail.SetPosition(1, Vector2.Lerp(start, end, progress));
-        }).SetEase(Ease.Linear).OnComplete(() =>
-        {
-            if (trail != null)
-                Destroy(trail.gameObject, trailRemainDuration);
-        });
+        SpawnHitEffect(position);
+        if (damageable != null)
+            ShowTargetHealth(damageable);
+        ShakeCamera(hitShakeIntensity, hitShakeDuration);
     }
 
     private void ShakeCamera(float intensity, float duration)

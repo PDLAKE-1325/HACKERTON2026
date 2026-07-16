@@ -5,6 +5,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Rigidbody2D body;
+    [SerializeField] private Collider2D bodyCollider;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private Transform wallCheckOrigin;
 
@@ -18,7 +19,8 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Wall Grip")]
     [SerializeField] private LayerMask wallLayer;
-    [SerializeField] private float wallCheckDistance = 0.45f;
+    [SerializeField] private float wallCheckDistance = 0.15f;
+    [SerializeField, Range(0.2f, 1f)] private float wallCheckHeightRatio = 0.8f;
     [SerializeField] private float wallGripDuration = 0.65f;
     [SerializeField] private float wallRegrabDelay = 0.2f;
     [SerializeField] private float wallJumpHorizontalForce = 7f;
@@ -46,6 +48,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Awake()
     {
+        if (bodyCollider == null)
+            bodyCollider = GetComponent<Collider2D>();
+
         if (body != null)
             defaultGravityScale = body.gravityScale;
     }
@@ -62,6 +67,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (isWallGripping)
         {
+            if (!TryFindWallSide(out int currentWallSide) || currentWallSide != grippedWallSide)
+            {
+                ReleaseWall(false);
+                return;
+            }
+
             wallGripRemaining -= Time.fixedDeltaTime;
             body.linearVelocity = Vector2.zero;
 
@@ -153,23 +164,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void TryBeginWallGrip()
     {
-        if (isGrounded || body.linearVelocity.y > 0.1f || Time.time < nextWallGripTime)
+        if (isGrounded || Time.time < nextWallGripTime)
             return;
 
-        Vector2 origin = wallCheckOrigin != null
-            ? wallCheckOrigin.position
-            : body.position;
-
-        bool wallOnRight = Physics2D.Raycast(origin, Vector2.right, wallCheckDistance, wallLayer);
-        bool wallOnLeft = Physics2D.Raycast(origin, Vector2.left, wallCheckDistance, wallLayer);
-
-        if (!wallOnRight && !wallOnLeft)
+        if (!TryFindWallSide(out grippedWallSide))
             return;
-
-        if (wallOnRight && wallOnLeft)
-            grippedWallSide = facingDirection;
-        else
-            grippedWallSide = wallOnRight ? 1 : -1;
 
         isWallGripping = true;
         wallGripRemaining = wallGripDuration;
@@ -190,6 +189,52 @@ public class PlayerMovement : MonoBehaviour
         float vertical = jumpUp ? wallJumpVerticalForce : -wallReleaseFallSpeed;
         body.linearVelocity = new Vector2(horizontal, vertical);
         facingDirection = -grippedWallSide;
+
+        Vector3 scale = transform.localScale;
+        scale.x = Mathf.Abs(scale.x) * facingDirection;
+        transform.localScale = scale;
+    }
+
+    private bool TryFindWallSide(out int wallSide)
+    {
+        wallSide = 0;
+
+        Vector2 origin = wallCheckOrigin != null
+            ? wallCheckOrigin.position
+            : body.position;
+        Vector2 castSize = Vector2.one * 0.1f;
+
+        if (bodyCollider != null)
+        {
+            Bounds bounds = bodyCollider.bounds;
+            origin = bounds.center;
+            castSize = new Vector2(
+                Mathf.Max(0.05f, bounds.size.x * 0.9f),
+                Mathf.Max(0.05f, bounds.size.y * wallCheckHeightRatio));
+        }
+
+        bool wallOnRight = Physics2D.BoxCast(
+            origin,
+            castSize,
+            0f,
+            Vector2.right,
+            wallCheckDistance,
+            wallLayer).collider != null;
+        bool wallOnLeft = Physics2D.BoxCast(
+            origin,
+            castSize,
+            0f,
+            Vector2.left,
+            wallCheckDistance,
+            wallLayer).collider != null;
+
+        if (!wallOnRight && !wallOnLeft)
+            return false;
+
+        wallSide = wallOnRight && wallOnLeft
+            ? facingDirection
+            : wallOnRight ? 1 : -1;
+        return true;
     }
 
     private IEnumerator DashRoutine()
@@ -218,9 +263,17 @@ public class PlayerMovement : MonoBehaviour
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
 
-        Vector3 origin = wallCheckOrigin != null ? wallCheckOrigin.position : transform.position;
+        Vector3 origin = bodyCollider != null
+            ? bodyCollider.bounds.center
+            : wallCheckOrigin != null ? wallCheckOrigin.position : transform.position;
+        Vector3 size = bodyCollider != null
+            ? new Vector3(
+                bodyCollider.bounds.size.x * 0.9f,
+                bodyCollider.bounds.size.y * wallCheckHeightRatio,
+                0f)
+            : Vector3.one * 0.1f;
         Gizmos.color = Color.cyan;
-        Gizmos.DrawLine(origin, origin + Vector3.right * wallCheckDistance);
-        Gizmos.DrawLine(origin, origin + Vector3.left * wallCheckDistance);
+        Gizmos.DrawWireCube(origin + Vector3.right * wallCheckDistance, size);
+        Gizmos.DrawWireCube(origin + Vector3.left * wallCheckDistance, size);
     }
 }

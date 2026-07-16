@@ -6,11 +6,12 @@ public class PlayerSkill : MonoBehaviour
     [Header("References")]
     [SerializeField] private Camera targetCamera;
     [SerializeField] private SpriteRenderer skillSprite;
+    [SerializeField] private ResonanceStack resonanceStack;
 
     [Header("Target")]
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private float teleportOffset = 1.25f;
-    [SerializeField] private float finisherDamage = 999f;
+    [SerializeField] private float finisherDamage = 30f;
 
     [Header("Timing")]
     [SerializeField] private float cooldown = 5f;
@@ -29,12 +30,20 @@ public class PlayerSkill : MonoBehaviour
     private Tween timeScaleTween;
     private Tween spriteTween;
 
-    public float FinisherDamage => finisherDamage;
+    public float FinisherDamage => finisherDamage +
+        (resonanceStack != null ? resonanceStack.BonusDamage : 0f);
+    public bool IsActive => isActive;
 
     private void Update()
     {
         if (!isActive || InputManager.Instance == null)
             return;
+
+        if (!InputManager.Instance.SpecialAbilityHeld)
+        {
+            FinishAndStartCooldown();
+            return;
+        }
 
         bool leftMouseHeld = InputManager.Instance.OnLMB();
         if (!leftMouseHeld)
@@ -58,6 +67,8 @@ public class PlayerSkill : MonoBehaviour
         isActive = true;
         canAcceptTargetClick = !InputManager.Instance.OnLMB();
         InputManager.Instance.SetInputAllowed(false);
+        if (resonanceStack != null)
+            resonanceStack.SetSkillActive(true);
 
         timeScaleTween?.Kill();
         timeScaleTween = DOTween.To(
@@ -105,17 +116,21 @@ public class PlayerSkill : MonoBehaviour
 
         HitData hitData = new HitData
         {
-            damage = finisherDamage,
+            damage = FinisherDamage,
             knockbackForce = 0f,
             sourcePosition = transform.position,
             applyMark = false
         };
 
         damageable.TakeHit(hitData);
+        bool killedTarget = healthTarget.IsDead;
+        if (resonanceStack != null)
+            resonanceStack.ResolveSkillHit(killedTarget);
+
         if (CameraManager.Instance != null)
             CameraManager.Instance.Shake(hitShakeIntensity, hitShakeDuration);
 
-        if (!healthTarget.IsDead || !hadMark)
+        if (!killedTarget || !hadMark)
             FinishAndStartCooldown();
     }
 
@@ -138,6 +153,8 @@ public class PlayerSkill : MonoBehaviour
 
         isActive = false;
         nextUseTime = Time.unscaledTime + cooldown;
+        if (resonanceStack != null)
+            resonanceStack.SetSkillActive(false);
 
         timeScaleTween?.Kill();
         timeScaleTween = DOTween.To(
@@ -170,5 +187,15 @@ public class PlayerSkill : MonoBehaviour
     {
         timeScaleTween?.Kill();
         spriteTween?.Kill();
+
+        if (!isActive)
+            return;
+
+        isActive = false;
+        Time.timeScale = 1f;
+        if (InputManager.Instance != null)
+            InputManager.Instance.SetInputAllowed(true);
+        if (resonanceStack != null)
+            resonanceStack.SetSkillActive(false);
     }
 }

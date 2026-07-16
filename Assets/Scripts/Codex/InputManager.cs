@@ -13,6 +13,8 @@ public class InputManager : Singleton<InputManager>
     public bool Jump => Input.GetKeyDown(playerInputs.Jump);
     public bool Dash => Input.GetKeyDown(playerInputs.Dash);
     public bool SpecialAbility => Input.GetKeyDown(playerInputs.SpecialAbility);
+    public bool SpecialAbilityHeld => Input.GetKey(playerInputs.SpecialAbility);
+    public bool SpecialAbilityReleased => Input.GetKeyUp(playerInputs.SpecialAbility);
     public Vector3 MousePosition => Input.mousePosition;
 
     public void SetInputAllowed(bool value) => InputAllowed = value;
