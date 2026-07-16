@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
@@ -27,7 +27,13 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
     [SerializeField] protected string hitTrigger = "Hit";
     [SerializeField] protected string deathTrigger = "Death";
     [SerializeField] protected float knockbackMovementLock = 0.18f;
-    [SerializeField] protected float deathDestroyDelay = 1f;
+
+    [Header("Death Visual")]
+    [SerializeField] private float deathAnimationHold = 0.25f;
+    [SerializeField] private float deathFadeDuration = 0.65f;
+    [SerializeField] private GameObject deathParticlePrefab;
+    [SerializeField] private Vector3 deathParticleOffset;
+    [SerializeField] private float deathParticleLifetime = 2f;
 
     [Header("Patrol")]
     [SerializeField] protected float moveSpeed = 2f;
@@ -64,6 +70,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
     private bool isDead;
     private Coroutine markCoroutine;
     private SpriteRenderer markerInstance;
+    private Sequence deathSequence;
 
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
@@ -242,7 +249,10 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         RemoveMark();
 
         if (body != null)
+        {
             body.linearVelocity = Vector2.zero;
+            body.simulated = false;
+        }
 
         foreach (Collider2D enemyCollider in GetComponentsInChildren<Collider2D>())
             enemyCollider.enabled = false;
@@ -250,8 +260,69 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         if (animator != null && !string.IsNullOrEmpty(deathTrigger))
             animator.SetTrigger(deathTrigger);
 
+        if (deathParticlePrefab != null)
+        {
+            GameObject particle = Instantiate(
+                deathParticlePrefab,
+                transform.position + deathParticleOffset,
+                Quaternion.identity);
+            Destroy(particle, deathParticleLifetime);
+        }
+
         Died?.Invoke(this);
-        Destroy(gameObject, deathDestroyDelay);
+        PlayDeathFade();
+    }
+
+    private void PlayDeathFade()
+    {
+        deathSequence?.Kill();
+        deathSequence = DOTween.Sequence().SetUpdate(true);
+        deathSequence.AppendInterval(Mathf.Max(0f, deathAnimationHold));
+
+        Tween scaleTween = transform.DOScale(Vector3.zero, Mathf.Max(0.01f, deathFadeDuration))
+            .SetEase(Ease.InQuad);
+        deathSequence.Append(scaleTween);
+
+        foreach (SpriteRenderer spriteRenderer in GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            deathSequence.Join(
+                spriteRenderer.DOFade(0f, deathFadeDuration)
+                    .SetEase(Ease.InQuad));
+        }
+
+        foreach (MeshRenderer meshRenderer in GetComponentsInChildren<MeshRenderer>(true))
+        {
+            Material material = meshRenderer.material;
+            if (material.HasProperty("_Surface"))
+                material.SetFloat("_Surface", 1f);
+            if (material.HasProperty("_ZWrite"))
+                material.SetFloat("_ZWrite", 0f);
+            if (material.HasProperty("_SrcBlend"))
+                material.SetFloat("_SrcBlend", 5f);
+            if (material.HasProperty("_DstBlend"))
+                material.SetFloat("_DstBlend", 10f);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.renderQueue = 3000;
+
+            if (material.HasProperty("_BaseColor"))
+            {
+                deathSequence.Join(
+                    material.DOFade(0f, "_BaseColor", deathFadeDuration)
+                        .SetEase(Ease.InQuad));
+            }
+            else if (material.HasProperty("_Color"))
+            {
+                deathSequence.Join(
+                    material.DOFade(0f, deathFadeDuration)
+                        .SetEase(Ease.InQuad));
+            }
+        }
+
+        deathSequence.OnComplete(() =>
+        {
+            deathSequence = null;
+            Destroy(gameObject);
+        });
     }
 
     protected virtual void ApplyMark()
@@ -288,7 +359,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         }
     }
 
-    private IEnumerator MarkTimer()
+    private System.Collections.IEnumerator MarkTimer()
     {
         yield return new WaitForSeconds(markDuration);
         markCoroutine = null;
@@ -313,6 +384,11 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         float minimum = Mathf.Min(directionChangeInterval.x, directionChangeInterval.y);
         float maximum = Mathf.Max(directionChangeInterval.x, directionChangeInterval.y);
         nextDirectionChangeTime = Time.time + UnityEngine.Random.Range(minimum, maximum);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        deathSequence?.Kill();
     }
 
     protected virtual void OnDrawGizmosSelected()
