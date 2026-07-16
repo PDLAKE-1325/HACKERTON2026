@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a912df55fa3c947a89d8c44788e5e48a, type: 3}
+  m_Name: GuardDepartureDialogue
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSO
+  lines:
+  - speakerName: "경비병"
+    sentence: "진짜 나갈 생각이냐?"
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "그래."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "바깥은 전보다 더 심해졌어. 완전히 굳어버린 놈들도 돌아다닌다고."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "알고 있어."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "너도 감염됐잖아. 몸 상태가 더 나빠지면 싸우지도 못해."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "그래서 더 늦기 전에 가려는 거야."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "대체 어디까지 갈 생각인데?"
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "이 현상을 시작한 근원까지."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "근원이 어디 있는지는 알고?"
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "찾을 수 있어. 감염된 뒤부터 계속 느껴지니까."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "그런 얘기는 처음 듣는데."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "말해봤자 아무도 따라오지 않았을 테니까."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "다른 전투원들은 아무도 가지 않으려 하고 있어."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "당연하지. 저 밖을 뚫고 근원까지 가는 건 미친 짓이니까."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "너도 그걸 알면서 가겠다고?"
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "여기 남아서 천천히 굳어가는 것보다는 낫잖아."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "네 의지가 먼저 깨질 수도 있어."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "그 전에 근원을 깨면 돼."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "…말려도 소용없겠군."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "진작 알았잖아."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "문을 열겠다. 네가 나가면 바로 다시 닫을 거야."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "그래. 마을이나 잘 지켜."
+    portrait: {fileID: 0}
+  - speakerName: "경비병"
+    sentence: "살아서 돌아와."
+    portrait: {fileID: 0}
+  - speakerName: "주인공"
+    sentence: "돌아올 수 있게 끝내고 올게."
+    portrait: {fileID: 0}
