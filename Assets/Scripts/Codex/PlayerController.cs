@@ -12,6 +12,9 @@ public class PlayerController : MonoBehaviour
         if (input == null)
             return;
 
+        if (skill != null && input.SpecialAbility)
+            skill.Toggle();
+
         if (!input.InputAllowed)
         {
             if (movement != null)
@@ -44,9 +47,6 @@ public class PlayerController : MonoBehaviour
             if (input.OnRMB())
                 combat.TryRangedAttack();
         }
-
-        if (skill != null && input.SpecialAbility)
-            skill.TryActivate();
     }
 
     private void OnDisable()
