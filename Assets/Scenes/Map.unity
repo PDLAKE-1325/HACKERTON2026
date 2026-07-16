@@ -7048,7 +7048,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1439327521}
   m_Layer: 0
-  m_Name: Enemys
+  m_Name: Enemies
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11239,9 +11239,9 @@ SceneRoots:
   - {fileID: 1058622866}
   - {fileID: 1591501045}
   - {fileID: 2034368421}
+  - {fileID: 1206707254}
   - {fileID: 1823184398}
   - {fileID: 559017962}
   - {fileID: 584231506}
   - {fileID: 1439327521}
-  - {fileID: 1206707254}
   - {fileID: 2089550425}
