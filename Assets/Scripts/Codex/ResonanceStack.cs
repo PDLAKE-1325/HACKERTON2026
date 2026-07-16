@@ -20,6 +20,11 @@ public class ResonanceStack : MonoBehaviour
     public int CurrentStack => currentStack;
     public float BonusDamage => currentStack * bonusDamagePerStack;
 
+    public float CalculateSkillDamage(float baseDamage)
+    {
+        return Mathf.Max(0f, baseDamage) + BonusDamage;
+    }
+
     private void Start()
     {
         RefreshUI();
