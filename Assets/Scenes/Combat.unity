@@ -341,6 +341,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TargetHealthBar
   healthBarRoot: {fileID: 130269988}
   healthSlider: {fileID: 130269991}
+  healthFillImage: {fileID: 0}
   hideDelay: 3
 --- !u!114 &130269991
 MonoBehaviour:
@@ -1819,6 +1820,7 @@ MonoBehaviour:
   animator: {fileID: 1200175003}
   movement: {fileID: 1200175002}
   healthSlider: {fileID: 1855075571}
+  healthFillImage: {fileID: 0}
   gameOverSprite: {fileID: 426304024}
   maxHealth: 100
   hitTrigger: Hit
