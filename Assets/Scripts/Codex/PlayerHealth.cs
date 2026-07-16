@@ -18,6 +18,11 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
     [SerializeField] private string hitTrigger = "Hit";
     [SerializeField] private string deathTrigger = "Death";
 
+    [Header("Hit Knockback")]
+    [SerializeField] private float knockbackHorizontalMultiplier = 0.55f;
+    [SerializeField] private float knockbackVerticalMultiplier = 0.2f;
+    [SerializeField] private float knockbackControlLockDuration = 0.14f;
+
     [Header("Death")]
     [SerializeField] private float deathSlowDuration = 0.8f;
     [SerializeField] private float gameOverShakeIntensity = 2.5f;
@@ -66,7 +71,20 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
             DamageTextManager.Instance.Show(transform.position, hitData.damage, knockbackDirection);
 
         if (body != null && hitData.knockbackForce > 0f)
-            body.AddForce(knockbackDirection * hitData.knockbackForce, ForceMode2D.Impulse);
+        {
+            float horizontalDirection = Mathf.Sign(knockbackDirection.x);
+            if (Mathf.Approximately(horizontalDirection, 0f))
+                horizontalDirection = movement != null ? -movement.FacingDirection : 1f;
+
+            Vector2 knockbackVelocity = new Vector2(
+                horizontalDirection * hitData.knockbackForce * knockbackHorizontalMultiplier,
+                hitData.knockbackForce * knockbackVerticalMultiplier);
+
+            if (movement != null)
+                movement.ApplyKnockback(knockbackVelocity, knockbackControlLockDuration);
+            else
+                body.linearVelocity = knockbackVelocity;
+        }
 
         if (animator != null && !string.IsNullOrEmpty(hitTrigger))
             animator.SetTrigger(hitTrigger);
