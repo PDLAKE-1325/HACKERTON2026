@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class BossEnemy : EnemyBase
 {
@@ -99,13 +100,12 @@ public class BossEnemy : EnemyBase
             patternRoutine = null;
         }
 
+
+        EndingYeah.Instance.kk();
         base.Die();
-        kk();
     }
 
-    public virtual void kk()
-    {
-    }
+
 
     private void OnDisable()
     {
