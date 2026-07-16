@@ -84,7 +84,13 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput = Mathf.Clamp(value, -1f, 1f);
         if (Mathf.Abs(moveInput) > 0.01f)
+        {
             facingDirection = moveInput > 0f ? 1 : -1;
+
+            Vector3 scale = transform.localScale;
+            scale.x = Mathf.Abs(scale.x) * facingDirection;
+            transform.localScale = scale;
+        }
     }
 
     public void TryJump()
