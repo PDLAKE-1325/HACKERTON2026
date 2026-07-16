@@ -10,6 +10,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
     [SerializeField] private Animator animator;
     [SerializeField] private PlayerMovement movement;
     [SerializeField] private Slider healthSlider;
+    [SerializeField] private Image healthFillImage;
     [SerializeField] private GameObject gameOverSprite;
 
     [Header("Health")]
@@ -36,11 +37,13 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
     private void Awake()
     {
         currentHealth = maxHealth;
+        CacheFillImage();
         if (healthSlider != null)
         {
             healthSlider.maxValue = maxHealth;
             healthSlider.value = currentHealth;
         }
+        UpdateHealthUi();
 
         if (gameOverSprite != null)
             gameOverSprite.SetActive(false);
@@ -113,6 +116,41 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
     {
         if (healthSlider != null)
             healthSlider.value = currentHealth;
+
+        float normalizedHealth = maxHealth > 0f
+            ? Mathf.Clamp01(currentHealth / maxHealth)
+            : 0f;
+        UpdateFillImage(normalizedHealth);
+    }
+
+    private void CacheFillImage()
+    {
+        if (healthSlider != null)
+        {
+            if (healthFillImage == null && healthSlider.fillRect != null)
+                healthFillImage = healthSlider.fillRect.GetComponent<Image>();
+
+            healthSlider.fillRect = null;
+        }
+
+        if (healthFillImage == null)
+            return;
+
+        healthFillImage.type = Image.Type.Simple;
+    }
+
+    private void UpdateFillImage(float normalizedHealth)
+    {
+        if (healthFillImage == null)
+            return;
+
+        healthFillImage.enabled = normalizedHealth > 0f;
+
+        RectTransform fillRect = healthFillImage.rectTransform;
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = new Vector2(normalizedHealth, 1f);
+        fillRect.offsetMin = new Vector2(4f, 4f);
+        fillRect.offsetMax = new Vector2(-4f, -4f);
     }
 
     private void OnDestroy()
