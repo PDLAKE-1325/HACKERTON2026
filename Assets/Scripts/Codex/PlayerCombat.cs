@@ -129,7 +129,6 @@ public class PlayerCombat : MonoBehaviour
             projectileLifetime,
             rangedHitLayers,
             projectileImage);
-        PlayAttackSound(stoneAttackSound);
     }
 
     private static void PlayAttackSound(AudioClip clip)
@@ -208,7 +207,10 @@ public class PlayerCombat : MonoBehaviour
     {
         SpawnHitEffect(position);
         if (damageable != null)
+        {
+            PlayAttackSound(stoneAttackSound);
             ShowTargetHealth(damageable);
+        }
         ShakeCamera(hitShakeIntensity, hitShakeDuration);
     }
 
