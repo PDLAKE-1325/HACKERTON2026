@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 {
+    private const float AttackFallbackDelay = 0.1f;
+
     private enum HitboxShape
     {
         Box,
@@ -20,6 +22,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
     [Header("Layers")]
     [SerializeField] protected LayerMask groundLayer;
+    [SerializeField] protected LayerMask wallLayer;
     [SerializeField] protected LayerMask playerLayer;
 
     [Header("Health")]
@@ -39,7 +42,16 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
     [SerializeField] protected float moveSpeed = 2f;
     [SerializeField] protected float patrolRange = 4f;
     [SerializeField] protected float groundAheadDistance = 1.2f;
-    [SerializeField] protected Vector2 directionChangeInterval = new Vector2(1.2f, 3f);
+
+    [Header("Chase")]
+    [SerializeField] protected float playerDetectionRange = 6f;
+    [SerializeField] protected float loseTargetRange = 8f;
+    [SerializeField] protected float chaseSpeed = 3.5f;
+
+    [Header("Wall Turn")]
+    [SerializeField] protected float wallCheckDistance = 0.15f;
+    [SerializeField] protected float wallTurnPauseDuration = 0.45f;
+    [SerializeField] protected float wallRetreatDuration = 0.8f;
 
     [Header("Attack")]
     [SerializeField] protected float attackDetectionRange = 2f;
@@ -63,11 +75,16 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
     private float currentHealth;
     private float spawnX;
     private float patrolDirection = 1f;
-    private float nextDirectionChangeTime;
     private float nextAttackTime;
     private float movementLockedUntil;
+    private float wallPauseUntil;
+    private float wallRetreatUntil;
+    private float pendingAttackHitTime = -1f;
     private bool attackHitboxEnabled;
+    private bool attackDamageApplied;
     private bool isDead;
+    private Collider2D bodyCollider;
+    private PlayerHealth playerTarget;
     private Coroutine markCoroutine;
     private SpriteRenderer markerInstance;
     private Sequence deathSequence;
@@ -85,7 +102,10 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         currentHealth = maxHealth;
         spawnX = transform.position.x;
         patrolDirection = UnityEngine.Random.value < 0.5f ? -1f : 1f;
-        ScheduleDirectionChange();
+        bodyCollider = GetComponent<Collider2D>();
+
+        if (wallLayer.value == 0)
+            wallLayer = LayerMask.GetMask("Wall");
 
         if (playerSkill == null)
             playerSkill = FindAnyObjectByType<PlayerSkill>();
@@ -96,26 +116,43 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         if (isDead || body == null)
             return;
 
-        DetectPlayerForAttack();
-
         if (attackHitboxEnabled)
             ScanAttackHitbox();
 
-        if (Time.time >= movementLockedUntil)
+        ResolvePendingAttack();
+
+        UpdatePlayerTarget();
+
+        if (Time.time < movementLockedUntil)
+            return;
+
+        if (Time.time < wallPauseUntil)
+        {
+            StopHorizontalMovement();
+            return;
+        }
+
+        if (Time.time < wallRetreatUntil)
+        {
+            MoveHorizontal(patrolDirection, moveSpeed);
+            return;
+        }
+
+        if (playerTarget != null)
+            ChasePlayer();
+        else
             Patrol();
     }
 
     protected virtual void Patrol()
     {
-        if (Time.time >= nextDirectionChangeTime)
-        {
-            patrolDirection = UnityEngine.Random.value < 0.5f ? -1f : 1f;
-            ScheduleDirectionChange();
-        }
-
         float distanceFromSpawn = transform.position.x - spawnX;
-        if (Mathf.Abs(distanceFromSpawn) >= patrolRange)
-            patrolDirection = distanceFromSpawn > 0f ? -1f : 1f;
+        if (distanceFromSpawn >= patrolRange)
+            patrolDirection = -1f;
+        else if (distanceFromSpawn <= -patrolRange)
+            patrolDirection = 1f;
+
+        FaceDirection(patrolDirection);
 
         if (groundAheadCheck != null)
         {
@@ -131,29 +168,127 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
                 patrolDirection *= -1f;
         }
 
-        Vector2 velocity = body.linearVelocity;
-        velocity.x = patrolDirection * moveSpeed;
-        body.linearVelocity = velocity;
+        MoveHorizontal(patrolDirection, moveSpeed);
+    }
 
+    protected virtual void ChasePlayer()
+    {
+        if (playerTarget == null)
+            return;
+
+        Vector2 offset = playerTarget.transform.position - transform.position;
+        float chaseDirection = Mathf.Sign(offset.x);
+        if (Mathf.Approximately(chaseDirection, 0f))
+            chaseDirection = patrolDirection;
+
+        FaceDirection(chaseDirection);
+        if (offset.magnitude <= attackDetectionRange)
+        {
+            StopHorizontalMovement();
+            DetectPlayerForAttack();
+            return;
+        }
+
+        MoveHorizontal(chaseDirection, chaseSpeed);
+    }
+
+    protected virtual void UpdatePlayerTarget()
+    {
+        if (playerTarget != null)
+        {
+            float distance = Vector2.Distance(transform.position, playerTarget.transform.position);
+            if (playerTarget.IsDead || !playerTarget.gameObject.activeInHierarchy ||
+                distance > Mathf.Max(playerDetectionRange, loseTargetRange))
+            {
+                playerTarget = null;
+            }
+        }
+
+        if (playerTarget != null)
+            return;
+
+        Collider2D detectedPlayer = Physics2D.OverlapCircle(
+            transform.position,
+            playerDetectionRange,
+            playerLayer);
+        if (detectedPlayer != null)
+            playerTarget = detectedPlayer.GetComponentInParent<PlayerHealth>();
+    }
+
+    private void MoveHorizontal(float direction, float speed)
+    {
+        direction = direction >= 0f ? 1f : -1f;
+        if (TryFindWallAhead(direction))
+        {
+            BeginWallTurn(direction);
+            return;
+        }
+
+        FaceDirection(direction);
+        Vector2 velocity = body.linearVelocity;
+        velocity.x = direction * speed;
+        body.linearVelocity = velocity;
+    }
+
+    private bool TryFindWallAhead(float direction)
+    {
+        Vector2 castDirection = direction >= 0f ? Vector2.right : Vector2.left;
+        Vector2 origin = body.position;
+        Vector2 castSize = new Vector2(0.1f, 0.1f);
+
+        if (bodyCollider != null)
+        {
+            Bounds bounds = bodyCollider.bounds;
+            origin = bounds.center;
+            castSize = new Vector2(
+                Mathf.Max(0.05f, bounds.size.x * 0.9f),
+                Mathf.Max(0.05f, bounds.size.y * 0.75f));
+        }
+
+        return Physics2D.BoxCast(
+            origin,
+            castSize,
+            0f,
+            castDirection,
+            wallCheckDistance,
+            wallLayer).collider != null;
+    }
+
+    private void BeginWallTurn(float blockedDirection)
+    {
+        patrolDirection = blockedDirection > 0f ? -1f : 1f;
+        wallPauseUntil = Time.time + Mathf.Max(0f, wallTurnPauseDuration);
+        wallRetreatUntil = wallPauseUntil + Mathf.Max(0f, wallRetreatDuration);
+        playerTarget = null;
+        StopHorizontalMovement();
+        FaceDirection(patrolDirection);
+    }
+
+    private void StopHorizontalMovement()
+    {
+        Vector2 velocity = body.linearVelocity;
+        velocity.x = 0f;
+        body.linearVelocity = velocity;
+    }
+
+    private void FaceDirection(float direction)
+    {
         Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * patrolDirection;
+        scale.x = Mathf.Abs(scale.x) * (direction >= 0f ? 1f : -1f);
         transform.localScale = scale;
     }
 
     protected virtual void DetectPlayerForAttack()
     {
-        if (attackPoint == null || Time.time < nextAttackTime)
-            return;
-
-        Collider2D player = Physics2D.OverlapCircle(
-            attackPoint.position,
-            attackDetectionRange,
-            playerLayer);
-        if (player == null)
+        if (playerTarget == null || Time.time < nextAttackTime)
             return;
 
         nextAttackTime = Time.time + attackCooldown;
         movementLockedUntil = Mathf.Max(movementLockedUntil, Time.time + attackCooldown * 0.5f);
+        pendingAttackHitTime = Time.time + AttackFallbackDelay;
+        attackDamageApplied = false;
+        attackHitboxEnabled = false;
+        hitTargets.Clear();
 
         if (animator != null && !string.IsNullOrEmpty(attackTrigger))
             animator.SetTrigger(attackTrigger);
@@ -161,9 +296,9 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
     public virtual void EnableAttackHitbox()
     {
-        hitTargets.Clear();
         attackHitboxEnabled = true;
-        ScanAttackHitbox();
+        if (!attackDamageApplied)
+            ScanAttackHitbox();
     }
 
     public virtual void DisableAttackHitbox()
@@ -174,7 +309,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
     protected virtual void ScanAttackHitbox()
     {
-        if (attackPoint == null)
+        if (attackPoint == null || attackDamageApplied)
             return;
 
         Collider2D[] overlaps = attackHitboxShape == HitboxShape.Box
@@ -198,14 +333,39 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
             if (!hitTargets.Add(targetComponent))
                 continue;
 
-            damageable.TakeHit(new HitData
-            {
-                damage = attackDamage,
-                knockbackForce = attackKnockback,
-                sourcePosition = attackPoint.position,
-                applyMark = false
-            });
+            ApplyAttackDamage(damageable, attackPoint.position);
+            break;
         }
+    }
+
+    private void ResolvePendingAttack()
+    {
+        if (pendingAttackHitTime < 0f || Time.time < pendingAttackHitTime)
+            return;
+
+        pendingAttackHitTime = -1f;
+        if (attackDamageApplied)
+            return;
+
+        ScanAttackHitbox();
+        if (attackDamageApplied || playerTarget == null || playerTarget.IsDead)
+            return;
+
+        float distance = Vector2.Distance(transform.position, playerTarget.transform.position);
+        if (distance <= attackDetectionRange + 0.25f)
+            ApplyAttackDamage(playerTarget, transform.position);
+    }
+
+    private void ApplyAttackDamage(IDamageable damageable, Vector2 sourcePosition)
+    {
+        attackDamageApplied = true;
+        damageable.TakeHit(new HitData
+        {
+            damage = attackDamage,
+            knockbackForce = attackKnockback,
+            sourcePosition = sourcePosition,
+            applyMark = false
+        });
     }
 
     public virtual void TakeHit(HitData hitData)
@@ -246,6 +406,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
         isDead = true;
         attackHitboxEnabled = false;
+        pendingAttackHitTime = -1f;
         RemoveMark();
 
         if (body != null)
@@ -379,13 +540,6 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
             : unavailableMarkSprite;
     }
 
-    private void ScheduleDirectionChange()
-    {
-        float minimum = Mathf.Min(directionChangeInterval.x, directionChangeInterval.y);
-        float maximum = Mathf.Max(directionChangeInterval.x, directionChangeInterval.y);
-        nextDirectionChangeTime = Time.time + UnityEngine.Random.Range(minimum, maximum);
-    }
-
     protected virtual void OnDestroy()
     {
         deathSequence?.Kill();
@@ -393,6 +547,9 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
     protected virtual void OnDrawGizmosSelected()
     {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, playerDetectionRange);
+
         if (attackPoint != null)
         {
             Gizmos.color = Color.yellow;

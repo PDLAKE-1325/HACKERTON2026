@@ -110,6 +110,7 @@ public static class CombatSceneSetup
             { "animator", player.GetComponent<Animator>() },
             { "movement", player.GetComponent<PlayerMovement>() },
             { "healthSlider", playerSlider },
+            { "healthFillImage", Require("PlayerHealthFill").GetComponent<Image>() },
             { "gameOverSprite", Require("GameOverUI") }
         });
 
@@ -126,6 +127,7 @@ public static class CombatSceneSetup
             { "deathParticlePrefab", deathParticlePrefab }
         });
         SetLayerMask(enemy.GetComponent<EnemyBase>(), "groundLayer", LayerMask.GetMask("Ground"));
+        SetLayerMask(enemy.GetComponent<EnemyBase>(), "wallLayer", LayerMask.GetMask("Wall"));
         SetLayerMask(enemy.GetComponent<EnemyBase>(), "playerLayer", LayerMask.GetMask("Player"));
 
         SetObjectReferences(systems.GetComponent<CameraManager>(), new Dictionary<string, UnityEngine.Object>
@@ -236,7 +238,8 @@ public static class CombatSceneSetup
         SetObjectReferences(targetBar, new Dictionary<string, UnityEngine.Object>
         {
             { "healthBarRoot", targetBar.gameObject },
-            { "healthSlider", targetBar.GetComponent<Slider>() }
+            { "healthSlider", targetBar.GetComponent<Slider>() },
+            { "healthFillImage", Require("TargetHealthFill").GetComponent<Image>() }
         });
 
         Text gameOver = Require("GameOverUI").GetComponent<Text>();
@@ -251,15 +254,13 @@ public static class CombatSceneSetup
     {
         Slider slider = root.GetComponent<Slider>();
         Image fill = fillObject.GetComponent<Image>();
-        slider.fillRect = fill.rectTransform;
+        slider.fillRect = null;
         slider.targetGraphic = fill;
         slider.minValue = 0f;
         slider.maxValue = maximum;
         slider.value = maximum;
         slider.interactable = false;
-        fill.type = Image.Type.Filled;
-        fill.fillMethod = Image.FillMethod.Horizontal;
-        fill.fillOrigin = 0;
+        fill.type = Image.Type.Simple;
         EditorUtility.SetDirty(slider);
         EditorUtility.SetDirty(fill);
     }

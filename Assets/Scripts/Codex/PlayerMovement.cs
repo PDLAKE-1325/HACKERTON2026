@@ -25,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float wallRegrabDelay = 0.2f;
     [SerializeField] private float wallJumpHorizontalForce = 7f;
     [SerializeField] private float wallJumpVerticalForce = 13f;
+    [SerializeField] private float wallJumpControlLockDuration = 0.25f;
     [SerializeField] private float wallReleaseFallSpeed = 3f;
 
     [Header("Dash")]
@@ -37,6 +38,7 @@ public class PlayerMovement : MonoBehaviour
     private float wallGripRemaining;
     private float nextDashTime;
     private float nextWallGripTime;
+    private float wallJumpControlLockedUntil;
     private int facingDirection = 1;
     private int grippedWallSide;
     private bool isGrounded;
@@ -45,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
     private Coroutine dashCoroutine;
 
     public int FacingDirection => facingDirection;
+    public bool IsDashing => isDashing;
 
     private void Awake()
     {
@@ -86,6 +89,9 @@ public class PlayerMovement : MonoBehaviour
         if (isWallGripping)
             return;
 
+        if (Time.time < wallJumpControlLockedUntil)
+            return;
+
         Vector2 velocity = body.linearVelocity;
         velocity.x = moveInput * moveSpeed;
         body.linearVelocity = velocity;
@@ -94,7 +100,7 @@ public class PlayerMovement : MonoBehaviour
     public void SetMoveInput(float value)
     {
         moveInput = Mathf.Clamp(value, -1f, 1f);
-        if (Mathf.Abs(moveInput) > 0.01f)
+        if (Mathf.Abs(moveInput) > 0.01f && Time.time >= wallJumpControlLockedUntil)
         {
             facingDirection = moveInput > 0f ? 1 : -1;
 
@@ -138,6 +144,7 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput = 0f;
         isWallGripping = false;
+        wallJumpControlLockedUntil = 0f;
 
         if (dashCoroutine != null)
         {
@@ -182,8 +189,15 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         isWallGripping = false;
-        nextWallGripTime = Time.time + wallRegrabDelay;
         body.gravityScale = defaultGravityScale;
+
+        float regrabDelay = wallRegrabDelay;
+        if (jumpUp)
+        {
+            wallJumpControlLockedUntil = Time.time + wallJumpControlLockDuration;
+            regrabDelay = Mathf.Max(regrabDelay, wallJumpControlLockDuration);
+        }
+        nextWallGripTime = Time.time + regrabDelay;
 
         float horizontal = -grippedWallSide * wallJumpHorizontalForce;
         float vertical = jumpUp ? wallJumpVerticalForce : -wallReleaseFallSpeed;

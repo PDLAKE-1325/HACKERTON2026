@@ -5,6 +5,7 @@ public class TargetHealthBar : MonoBehaviour
 {
     [SerializeField] private GameObject healthBarRoot;
     [SerializeField] private Slider healthSlider;
+    [SerializeField] private Image healthFillImage;
     [SerializeField] private float hideDelay = 3f;
 
     private IHealthTarget currentTarget;
@@ -12,6 +13,7 @@ public class TargetHealthBar : MonoBehaviour
 
     private void Awake()
     {
+        CacheFillImage();
         SetVisible(false);
     }
 
@@ -23,7 +25,8 @@ public class TargetHealthBar : MonoBehaviour
 
     public void Show(IHealthTarget target)
     {
-        if (target == null || target.IsDead || healthSlider == null)
+        if (target == null || target.IsDead ||
+            (healthSlider == null && healthFillImage == null))
             return;
 
         if (currentTarget != target)
@@ -60,8 +63,46 @@ public class TargetHealthBar : MonoBehaviour
 
     private void Refresh(IHealthTarget target)
     {
-        healthSlider.maxValue = target.MaxHealth;
-        healthSlider.value = target.CurrentHealth;
+        if (healthSlider != null)
+        {
+            healthSlider.maxValue = target.MaxHealth;
+            healthSlider.value = target.CurrentHealth;
+        }
+
+        float normalizedHealth = target.MaxHealth > 0f
+            ? Mathf.Clamp01(target.CurrentHealth / target.MaxHealth)
+            : 0f;
+        UpdateFillImage(normalizedHealth);
+    }
+
+    private void CacheFillImage()
+    {
+        if (healthSlider != null)
+        {
+            if (healthFillImage == null && healthSlider.fillRect != null)
+                healthFillImage = healthSlider.fillRect.GetComponent<Image>();
+
+            healthSlider.fillRect = null;
+        }
+
+        if (healthFillImage == null)
+            return;
+
+        healthFillImage.type = Image.Type.Simple;
+    }
+
+    private void UpdateFillImage(float normalizedHealth)
+    {
+        if (healthFillImage == null)
+            return;
+
+        healthFillImage.enabled = normalizedHealth > 0f;
+
+        RectTransform fillRect = healthFillImage.rectTransform;
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = new Vector2(normalizedHealth, 1f);
+        fillRect.offsetMin = new Vector2(4f, 4f);
+        fillRect.offsetMax = new Vector2(-4f, -4f);
     }
 
     private void UnsubscribeCurrentTarget()
