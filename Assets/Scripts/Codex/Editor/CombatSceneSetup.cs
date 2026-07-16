@@ -318,6 +318,24 @@ public static class CombatSceneSetup
         }
     }
 
+    [MenuItem("Tools/Codex/Configure Enemy Move Animation")]
+    public static void ConfigureEnemyMoveAnimation()
+    {
+        EnsureFolder();
+
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(
+            $"{GeneratedRoot}/EnemyCombat.controller");
+        if (controller == null)
+            throw new InvalidOperationException("EnemyCombat.controller does not exist.");
+
+        AnimationClip moveClip = CreateClip("EnemyMove", 0.3f, null, true);
+        AddEnemyMoveState(controller, moveClip);
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("[CombatSceneSetup] Enemy move animation configured.");
+    }
+
     private static void ConfigurePhysics(GameObject player, GameObject enemy, PhysicsMaterial2D material)
     {
         ConfigureBody(player.GetComponent<Rigidbody2D>());
@@ -525,6 +543,7 @@ public static class CombatSceneSetup
         EnsureAnimationClock(enemy);
 
         AnimationClip enemyIdle = CreateClip("EnemyIdle", 0.2f, null, true);
+        AnimationClip enemyMove = CreateClip("EnemyMove", 0.3f, null, true);
         AnimationClip enemyAttack = CreateClip("EnemyAttack", 0.3f, new[]
         {
             new AnimationEvent { time = 0.08f, functionName = "EnableAttackHitbox" },
@@ -542,6 +561,7 @@ public static class CombatSceneSetup
                 new TriggerState("Hit", enemyHit, true),
                 new TriggerState("Death", enemyDeath, false)
             });
+        AddEnemyMoveState(enemyController, enemyMove);
         enemy.GetComponent<Animator>().runtimeAnimatorController = enemyController;
     }
 
@@ -635,6 +655,38 @@ public static class CombatSceneSetup
         }
 
         wallGrip.motion = wallGripClip;
+        EditorUtility.SetDirty(controller);
+    }
+
+    private static void AddEnemyMoveState(AnimatorController controller, AnimationClip moveClip)
+    {
+        if (!controller.parameters.Any(parameter => parameter.name == "Move"))
+            controller.AddParameter("Move", AnimatorControllerParameterType.Bool);
+
+        AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
+        AnimatorState idle = stateMachine.states
+            .Select(childState => childState.state)
+            .First(state => state.name == "Idle");
+        AnimatorState move = stateMachine.states
+            .Select(childState => childState.state)
+            .FirstOrDefault(state => state.name == "Move");
+
+        if (move == null)
+        {
+            move = stateMachine.AddState("Move");
+
+            AnimatorStateTransition startMoving = idle.AddTransition(move);
+            startMoving.hasExitTime = false;
+            startMoving.duration = 0f;
+            startMoving.AddCondition(AnimatorConditionMode.If, 0f, "Move");
+
+            AnimatorStateTransition stopMoving = move.AddTransition(idle);
+            stopMoving.hasExitTime = false;
+            stopMoving.duration = 0f;
+            stopMoving.AddCondition(AnimatorConditionMode.IfNot, 0f, "Move");
+        }
+
+        move.motion = moveClip;
         EditorUtility.SetDirty(controller);
     }
 
