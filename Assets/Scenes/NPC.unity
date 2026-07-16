@@ -1944,7 +1944,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &893130738
 Transform:
   m_ObjectHideFlags: 0
@@ -2689,7 +2689,7 @@ GameObject:
   - component: {fileID: 1565987906}
   - component: {fileID: 1565987905}
   m_Layer: 0
-  m_Name: NPC (1)
+  m_Name: NPC_gyongbi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
