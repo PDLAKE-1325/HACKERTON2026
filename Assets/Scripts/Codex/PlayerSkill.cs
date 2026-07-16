@@ -24,6 +24,9 @@ public class PlayerSkill : MonoBehaviour
     [SerializeField] private float hitShakeIntensity = 2f;
     [SerializeField] private float hitShakeDuration = 0.16f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip slowAttackSound;
+
     private bool isActive;
     private bool canAcceptTargetClick;
     private float nextUseTime;
@@ -133,6 +136,8 @@ public class PlayerSkill : MonoBehaviour
         };
 
         damageable.TakeHit(hitData);
+        if (slowAttackSound != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlaySfx(slowAttackSound);
         bool killedTarget = healthTarget.IsDead;
         if (resonanceStack != null)
             resonanceStack.ResolveSkillHit(killedTarget);

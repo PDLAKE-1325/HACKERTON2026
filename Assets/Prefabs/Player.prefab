@@ -231,6 +231,8 @@ MonoBehaviour:
   muzzleFlashDuration: 0.12
   hitEffectPrefab: {fileID: 0}
   hitEffectDuration: 0.4
+  normalAttackSound: {fileID: 8300000, guid: bb3c02cb144d4c14b8b02ae925adb84a, type: 3}
+  stoneAttackSound: {fileID: 8300000, guid: e46f75b7eb4764f479381aa324f2b802, type: 3}
 --- !u!114 &3294501568736783883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -258,6 +260,7 @@ MonoBehaviour:
   spriteFadeDuration: 0.18
   hitShakeIntensity: 2
   hitShakeDuration: 0.16
+  slowAttackSound: {fileID: 8300000, guid: e4ea2d14d97538b429c86a7381b7d0c6, type: 3}
 --- !u!114 &6617966008100070564
 MonoBehaviour:
   m_ObjectHideFlags: 0
