@@ -179,6 +179,7 @@ MonoBehaviour:
   dashSpeed: 20
   dashDuration: 0.16
   dashCooldown: 0.8
+  fallResetY: -20
   moveBool: Move
   wallGripBool: WallGrip
 --- !u!114 &5870941947255686247
@@ -250,7 +251,7 @@ MonoBehaviour:
     m_Bits: 512
   teleportOffset: 1.25
   finisherDamage: 50
-  cooldown: 5
+  cooldown: 3.5
   skillTimeScale: 0.08
   slowDownDuration: 0.18
   restoreDuration: 0.18
@@ -284,6 +285,7 @@ MonoBehaviour:
   deathSlowDuration: 0.8
   gameOverShakeIntensity: 2.5
   gameOverShakeDuration: 0.3
+  restartKey: 114
 --- !u!114 &3954549403024303323
 MonoBehaviour:
   m_ObjectHideFlags: 0
