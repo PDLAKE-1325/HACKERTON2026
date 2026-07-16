@@ -2783,7 +2783,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebdb689410e984a30a155d52236f5eef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCInteraction
-  chatData: {fileID: 11400000, guid: 3619d7f5ad69a4364af96ce4527aaa01, type: 2}
+  chatData: {fileID: 11400000, guid: d7e8f9a0b1c24354a6b7c8d9e0f11223, type: 2}
   player: {fileID: 857658263}
   interactionUI: {fileID: 1477797548}
   interactionRange: 2
