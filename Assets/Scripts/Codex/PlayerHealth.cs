@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
@@ -27,9 +28,11 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
     [SerializeField] private float deathSlowDuration = 0.8f;
     [SerializeField] private float gameOverShakeIntensity = 2.5f;
     [SerializeField] private float gameOverShakeDuration = 0.3f;
+    [SerializeField] private KeyCode restartKey = KeyCode.R;
 
     private float currentHealth;
     private bool isDead;
+    private bool canRestart;
     private Tween deathTween;
 
     public float CurrentHealth => currentHealth;
@@ -52,6 +55,12 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
 
         if (gameOverSprite != null)
             gameOverSprite.SetActive(false);
+    }
+
+    private void Update()
+    {
+        if (canRestart && Input.GetKeyDown(restartKey))
+            RestartCurrentScene();
     }
 
     public void TakeHit(HitData hitData)
@@ -124,10 +133,33 @@ public class PlayerHealth : MonoBehaviour, IDamageable, IHealthTarget
     private void ShowGameOver()
     {
         if (gameOverSprite != null)
+        {
+            Text gameOverText = gameOverSprite.GetComponent<Text>();
+            if (gameOverText != null)
+                gameOverText.text = $"GAME OVER\n\n[{restartKey}] 다시 시작";
             gameOverSprite.SetActive(true);
+        }
 
         if (CameraManager.Instance != null)
             CameraManager.Instance.Shake(gameOverShakeIntensity, gameOverShakeDuration);
+
+        canRestart = true;
+    }
+
+    private void RestartCurrentScene()
+    {
+        canRestart = false;
+        deathTween?.Kill();
+        Time.timeScale = 1f;
+
+        if (InputManager.Instance != null)
+            InputManager.Instance.SetInputAllowed(true);
+
+        Scene currentScene = SceneManager.GetActiveScene();
+        if (currentScene.buildIndex >= 0)
+            SceneManager.LoadScene(currentScene.buildIndex);
+        else
+            SceneManager.LoadScene(currentScene.name);
     }
 
     private void UpdateHealthUi()
