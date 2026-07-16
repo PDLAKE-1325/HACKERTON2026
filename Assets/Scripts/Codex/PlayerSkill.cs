@@ -33,14 +33,36 @@ public class PlayerSkill : MonoBehaviour
     private Tween timeScaleTween;
     private Tween spriteTween;
 
-    public float FinisherDamage => finisherDamage +
-        (resonanceStack != null ? resonanceStack.BonusDamage : 0f);
+    public float FinisherDamage
+    {
+        get
+        {
+            ResonanceStack activeStack = GetActiveResonanceStack();
+            return activeStack != null
+                ? activeStack.CalculateSkillDamage(finisherDamage)
+                : Mathf.Max(0f, finisherDamage);
+        }
+    }
     public bool IsActive => isActive;
     public float CooldownDuration => Mathf.Max(0f, cooldown);
     public float CooldownRemaining => Mathf.Max(0f, nextUseTime - Time.unscaledTime);
     public float CooldownProgress => CooldownDuration <= 0f
         ? 1f
         : 1f - CooldownRemaining / CooldownDuration;
+
+    private void Awake()
+    {
+        GetActiveResonanceStack();
+    }
+
+    private ResonanceStack GetActiveResonanceStack()
+    {
+        ResonanceStack localStack = GetComponent<ResonanceStack>();
+        if (localStack != null)
+            resonanceStack = localStack;
+
+        return resonanceStack;
+    }
 
     private void Update()
     {
@@ -82,8 +104,9 @@ public class PlayerSkill : MonoBehaviour
         InputManager.Instance.SetInputAllowed(false);
         if (AudioManager.Instance != null)
             AudioManager.Instance.SetMuffled(true);
-        if (resonanceStack != null)
-            resonanceStack.SetSkillActive(true);
+        ResonanceStack activeStack = GetActiveResonanceStack();
+        if (activeStack != null)
+            activeStack.SetSkillActive(true);
 
         timeScaleTween?.Kill();
         timeScaleTween = DOTween.To(
@@ -124,12 +147,16 @@ public class PlayerSkill : MonoBehaviour
             return;
 
         bool hadMark = enemy.HasMark;
+        ResonanceStack activeStack = GetActiveResonanceStack();
+        float totalDamage = activeStack != null
+            ? activeStack.CalculateSkillDamage(finisherDamage)
+            : Mathf.Max(0f, finisherDamage);
         enemy.RemoveMark();
         TeleportAcross(enemyComponent.transform);
 
         HitData hitData = new HitData
         {
-            damage = FinisherDamage,
+            damage = totalDamage,
             knockbackForce = 0f,
             sourcePosition = transform.position,
             applyMark = false
@@ -139,8 +166,8 @@ public class PlayerSkill : MonoBehaviour
         if (slowAttackSound != null && AudioManager.Instance != null)
             AudioManager.Instance.PlaySfx(slowAttackSound);
         bool killedTarget = healthTarget.IsDead;
-        if (resonanceStack != null)
-            resonanceStack.ResolveSkillHit(killedTarget);
+        if (activeStack != null)
+            activeStack.ResolveSkillHit(killedTarget);
 
         if (CameraManager.Instance != null)
             CameraManager.Instance.Shake(hitShakeIntensity, hitShakeDuration);
@@ -202,8 +229,9 @@ public class PlayerSkill : MonoBehaviour
 
         isActive = false;
         nextUseTime = Time.unscaledTime + cooldown;
-        if (resonanceStack != null)
-            resonanceStack.SetSkillActive(false);
+        ResonanceStack activeStack = GetActiveResonanceStack();
+        if (activeStack != null)
+            activeStack.SetSkillActive(false);
 
         timeScaleTween?.Kill();
         timeScaleTween = DOTween.To(
@@ -251,7 +279,8 @@ public class PlayerSkill : MonoBehaviour
         Time.timeScale = 1f;
         if (InputManager.Instance != null)
             InputManager.Instance.SetInputAllowed(true);
-        if (resonanceStack != null)
-            resonanceStack.SetSkillActive(false);
+        ResonanceStack activeStack = GetActiveResonanceStack();
+        if (activeStack != null)
+            activeStack.SetSkillActive(false);
     }
 }

@@ -61,6 +61,13 @@ public class PlayerCombat : MonoBehaviour
     private float nextMeleeTime;
     private float nextRangedTime;
 
+    private void Awake()
+    {
+        ResonanceStack localStack = GetComponent<ResonanceStack>();
+        if (localStack != null)
+            resonanceStack = localStack;
+    }
+
     private void Update()
     {
         if (meleeHitboxEnabled)
@@ -171,8 +178,12 @@ public class PlayerCombat : MonoBehaviour
                 applyMark = false
             };
 
-            if (resonanceStack != null)
-                resonanceStack.AddFromMeleeHit();
+            ResonanceStack activeStack = GetComponent<ResonanceStack>();
+            if (activeStack != null)
+            {
+                resonanceStack = activeStack;
+                activeStack.AddFromMeleeHit();
+            }
             damageable.TakeHit(hitData);
             ShowTargetHealth(damageable);
             ShakeCamera(meleeHitShakeIntensity, meleeHitShakeDuration);
