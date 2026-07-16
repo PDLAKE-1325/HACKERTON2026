@@ -6,6 +6,7 @@ using UnityEngine;
 public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 {
     private const float AttackFallbackDelay = 0.1f;
+    private const float MoveAnimationThreshold = 0.05f;
 
     private enum HitboxShape
     {
@@ -63,6 +64,9 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
     [SerializeField] protected float attackDamage = 15f;
     [SerializeField] protected float attackKnockback = 6f;
 
+    [Header("Animation")]
+    [SerializeField] private string moveBool = "Move";
+
     [Header("Mark")]
     [SerializeField] private float markDuration = 20f;
     [SerializeField] private SpriteRenderer markerPrefab;
@@ -109,6 +113,14 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
         if (playerSkill == null)
             playerSkill = FindAnyObjectByType<PlayerSkill>();
+    }
+
+    protected virtual void Update()
+    {
+        bool isMoving = !isDead &&
+            body != null &&
+            Mathf.Abs(body.linearVelocity.x) > MoveAnimationThreshold;
+        SetMoveAnimation(isMoving);
     }
 
     protected virtual void FixedUpdate()
@@ -271,6 +283,12 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
         body.linearVelocity = velocity;
     }
 
+    private void SetMoveAnimation(bool value)
+    {
+        if (animator != null && !string.IsNullOrEmpty(moveBool))
+            animator.SetBool(moveBool, value);
+    }
+
     private void FaceDirection(float direction)
     {
         Vector3 scale = transform.localScale;
@@ -405,6 +423,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
             return;
 
         isDead = true;
+        SetMoveAnimation(false);
         attackHitboxEnabled = false;
         pendingAttackHitTime = -1f;
         RemoveMark();
