@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class TitleMenu : MonoBehaviour
 {
-    [SerializeField] string nextSceneName;
+    [SerializeField] string nextSceneName = "";
     [SerializeField] GameObject credit;
 
     public void ToggleCredit()
@@ -15,6 +15,7 @@ public class TitleMenu : MonoBehaviour
     public void StartGame()
     {
         print("b");
-        // SceneManager.LoadScene(nextSceneName);
+        if (nextSceneName != "")
+            SceneManager.LoadScene(nextSceneName);
     }
 }
