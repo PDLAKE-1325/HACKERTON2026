@@ -1511,18 +1511,7 @@ MonoBehaviour:
     Google
     Fonts
 
-    - IBM Plex Sans KR
-
-    - Nanum Gothic Coding
-
-    - Orbit
-
-    -
-    Orbitron
-
-    - Rubik Mono One
-
-    - Roboto'
+    - IBM Plex Sans KR'
 --- !u!222 &1540685743
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -13,75 +13,83 @@ MonoBehaviour:
   m_Name: GuardDepartureDialogue
   m_EditorClassIdentifier: Assembly-CSharp::DialogueSO
   lines:
-  - speakerName: "경비병"
-    sentence: "진짜 나갈 생각이냐?"
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uC9C4\uC9DC \uB098\uAC08 \uC0DD\uAC01\uC774\uB0D0?"
     portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "그래."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uADF8\uB798."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uBC14\uAE65\uC740 \uC804\uBCF4\uB2E4 \uB354 \uC2EC\uD574\uC84C\uC5B4.
+      \uC644\uC804\uD788 \uAD73\uC5B4\uBC84\uB9B0 \uB188\uB4E4\uB3C4 \uB3CC\uC544\uB2E4\uB2CC\uB2E4\uACE0."
     portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "바깥은 전보다 더 심해졌어. 완전히 굳어버린 놈들도 돌아다닌다고."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uC54C\uACE0 \uC788\uC5B4."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uB108\uB3C4 \uAC10\uC5FC\uB410\uC796\uC544. \uBAB8 \uC0C1\uD0DC\uAC00
+      \uB354 \uB098\uBE60\uC9C0\uBA74 \uC2F8\uC6B0\uC9C0\uB3C4 \uBABB\uD574."
     portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "알고 있어."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uADF8\uB798\uC11C \uB354 \uB2A6\uAE30 \uC804\uC5D0 \uAC00\uB824\uB294
+      \uAC70\uC57C."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uB300\uCCB4 \uC5B4\uB514\uAE4C\uC9C0 \uAC08 \uC0DD\uAC01\uC778\uB370?"
     portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "너도 감염됐잖아. 몸 상태가 더 나빠지면 싸우지도 못해."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uC774 \uD604\uC0C1\uC758 \uADFC\uC6D0\uAE4C\uC9C0."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uADFC\uC6D0\uC774 \uC5B4\uB514 \uC788\uB294\uC9C0\uB294 \uC54C\uACE0?"
     portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "그래서 더 늦기 전에 가려는 거야."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uCC3E\uC744 \uC218 \uC788\uC5B4. \uAC10\uC5FC\uB41C \uB4A4\uBD80\uD130
+      \uACC4\uC18D \uB290\uAEF4\uC9C0\uB2C8\uAE4C."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uADF8\uB7F0 \uC598\uAE30\uB294 \uCC98\uC74C \uB4E3\uB294\uB370."
     portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "대체 어디까지 갈 생각인데?"
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uB9D0\uD574\uBD10\uB3C4 \uC544\uBB34\uB3C4 \uBBFF\uC9C0 \uC54A\uC558\uC5B4."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uB2E4\uB978 \uC804\uD22C\uC6D0\uB4E4\uC5D0\uAC8C \uAC19\uC774 \uAC00\uC790
+      \uD574\uB3C4 \uC544\uBB34\uB3C4 \uAC00\uB824 \uD558\uC9C0 \uC54A\uC558\uACA0\uAD70"
     portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "이 현상을 시작한 근원까지."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uB2F9\uC5F0\uD558\uC9C0. \uC800 \uBC16\uC744 \uB6AB\uACE0 \uADFC\uC6D0\uAE4C\uC9C0
+      \uAC00\uB294 \uAC74 \uBBF8\uCE5C \uC9D3\uC774\uB2C8\uAE4C."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uB108\uB3C4 \uADF8\uAC78 \uC54C\uBA74\uC11C \uAC00\uACA0\uB2E4\uACE0?"
     portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "근원이 어디 있는지는 알고?"
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uC5EC\uAE30 \uB0A8\uC544\uC11C \uCC9C\uCC9C\uD788 \uAD73\uC5B4\uAC00\uB294
+      \uAC83\uBCF4\uB2E4\uB294 \uB0AB\uC796\uC544."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uB124 \uC758\uC9C0\uAC00 \uBA3C\uC800 \uAE68\uC9C8 \uC218\uB3C4 \uC788\uC5B4."
     portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "찾을 수 있어. 감염된 뒤부터 계속 느껴지니까."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uADF8 \uC804\uC5D0 \uADFC\uC6D0\uC744 \uAE68\uBA74 \uB3FC."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\u2026\uB9D0\uB824\uB3C4 \uC18C\uC6A9\uC5C6\uACA0\uAD70."
     portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "그런 얘기는 처음 듣는데."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uC9C4\uC791 \uC54C\uC558\uC796\uC544."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uBB38\uC744 \uC5F4\uACA0\uB2E4. \uB124\uAC00 \uB098\uAC00\uBA74 \uBC14\uB85C
+      \uB2E4\uC2DC \uB2EB\uC744 \uAC70\uC57C."
     portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "말해봤자 아무도 따라오지 않았을 테니까."
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uADF8\uB798. \uB9C8\uC744\uC774\uB098 \uC798 \uC9C0\uCF1C."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
+  - speakerName: "\uACBD\uBE44\uBCD1"
+    sentence: "\uC0B4\uC544\uC11C \uB3CC\uC544\uC640."
     portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "다른 전투원들은 아무도 가지 않으려 하고 있어."
-    portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "당연하지. 저 밖을 뚫고 근원까지 가는 건 미친 짓이니까."
-    portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "너도 그걸 알면서 가겠다고?"
-    portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "여기 남아서 천천히 굳어가는 것보다는 낫잖아."
-    portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "네 의지가 먼저 깨질 수도 있어."
-    portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "그 전에 근원을 깨면 돼."
-    portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "…말려도 소용없겠군."
-    portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "진작 알았잖아."
-    portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "문을 열겠다. 네가 나가면 바로 다시 닫을 거야."
-    portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "그래. 마을이나 잘 지켜."
-    portrait: {fileID: 0}
-  - speakerName: "경비병"
-    sentence: "살아서 돌아와."
-    portrait: {fileID: 0}
-  - speakerName: "주인공"
-    sentence: "돌아올 수 있게 끝내고 올게."
-    portrait: {fileID: 0}
+  - speakerName: "\uC8FC\uC778\uACF5"
+    sentence: "\uB3CC\uC544\uC62C \uC218 \uC788\uAC8C \uB05D\uB0B4\uACE0 \uC62C\uAC8C."
+    portrait: {fileID: -4780720426310373332, guid: 23f270ab21a7249249b484ec87108e80, type: 3}
