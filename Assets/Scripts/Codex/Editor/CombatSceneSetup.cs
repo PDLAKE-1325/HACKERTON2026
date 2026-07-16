@@ -155,6 +155,20 @@ public static class CombatSceneSetup
         Debug.Log("[CombatSceneSetup] Combat scene setup completed and saved.");
     }
 
+    [MenuItem("Tools/Codex/Convert Combat Scene To 2D Sprites")]
+    public static void ConvertCombatSceneTo2DSprites()
+    {
+        if (EditorSceneManager.GetActiveScene().name != "Combat")
+            throw new InvalidOperationException("Combat scene must be active before conversion.");
+
+        ConfigureMaterials(Require("Player"), Require("Enemy"));
+
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveOpenScenes();
+        AssetDatabase.SaveAssets();
+        Debug.Log("[CombatSceneSetup] Combat scene visuals converted to SpriteRenderer.");
+    }
+
     private static void ConfigurePhysics(GameObject player, GameObject enemy, PhysicsMaterial2D material)
     {
         ConfigureBody(player.GetComponent<Rigidbody2D>());
@@ -184,40 +198,60 @@ public static class CombatSceneSetup
 
     private static void ConfigureMaterials(GameObject player, GameObject enemy)
     {
-        ConfigureMaterial(
-            "Assets/Materials/CodexPlayer.mat",
-            new Color(0.12f, 0.55f, 1f, 1f),
-            player);
-        ConfigureMaterial(
-            "Assets/Materials/CodexEnemy.mat",
-            new Color(1f, 0.18f, 0.18f, 1f),
-            enemy);
-        ConfigureMaterial(
-            "Assets/Materials/CodexGround.mat",
-            new Color(0.12f, 0.14f, 0.18f, 1f),
+        Sprite squareSprite = CreateColorSprite("WorldSquare", Color.white);
+
+        ConfigureSpriteRenderer(player, squareSprite, new Color(0.12f, 0.55f, 1f, 1f), 10);
+        ConfigureSpriteRenderer(enemy, squareSprite, new Color(1f, 0.18f, 0.18f, 1f), 10);
+        ConfigureSpriteRenderer(
             Require("Ground"),
+            squareSprite,
+            new Color(0.12f, 0.14f, 0.18f, 1f),
+            0);
+        ConfigureSpriteRenderer(
             Require("Left Wall"),
-            Require("Right Wall"));
+            squareSprite,
+            new Color(0.12f, 0.14f, 0.18f, 1f),
+            0);
+        ConfigureSpriteRenderer(
+            Require("Right Wall"),
+            squareSprite,
+            new Color(0.12f, 0.14f, 0.18f, 1f),
+            0);
     }
 
-    private static void ConfigureMaterial(string path, Color color, params GameObject[] objects)
+    private static void ConfigureSpriteRenderer(
+        GameObject target,
+        Sprite sprite,
+        Color color,
+        int sortingOrder)
     {
-        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (material == null)
-            throw new InvalidOperationException($"Required material '{path}' was not found.");
+        MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
+        if (meshRenderer != null)
+            Undo.DestroyObjectImmediate(meshRenderer);
 
-        if (material.HasProperty("_BaseColor"))
-            material.SetColor("_BaseColor", color);
-        if (material.HasProperty("_Color"))
-            material.SetColor("_Color", color);
-        EditorUtility.SetDirty(material);
+        MeshFilter meshFilter = target.GetComponent<MeshFilter>();
+        if (meshFilter != null)
+            Undo.DestroyObjectImmediate(meshFilter);
 
-        foreach (GameObject target in objects)
-        {
-            MeshRenderer renderer = target.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
-            EditorUtility.SetDirty(renderer);
-        }
+        SpriteRenderer renderer = target.GetComponent<SpriteRenderer>();
+        if (renderer == null)
+            renderer = Undo.AddComponent<SpriteRenderer>(target);
+
+        Undo.RecordObject(renderer, "Configure 2D sprite renderer");
+        renderer.sprite = sprite;
+        renderer.color = color;
+        renderer.drawMode = SpriteDrawMode.Simple;
+        renderer.sortingOrder = sortingOrder;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
+
+        Undo.RecordObject(target.transform, "Flatten 2D object");
+        Vector3 scale = target.transform.localScale;
+        scale.z = 1f;
+        target.transform.localScale = scale;
+
+        EditorUtility.SetDirty(renderer);
+        EditorUtility.SetDirty(target.transform);
     }
 
     private static void ConfigureUi(GameObject canvasObject, Camera mainCamera)
