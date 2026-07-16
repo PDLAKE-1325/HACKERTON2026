@@ -112,20 +112,48 @@ public class AudioManager : MonoBehaviour
     private void InitSfxPool()
     {
         _sfxPool = new List<AudioSource>();
+        _sfxPoolCursor = 0;
         if (sfxSourcePrefabOrTemplate == null) return;
 
-        for (int i = 0; i < sfxPoolSize; i++)
+        ConfigureSfxSource(sfxSourcePrefabOrTemplate);
+        _sfxPool.Add(sfxSourcePrefabOrTemplate);
+
+        int poolSize = Mathf.Max(1, sfxPoolSize);
+        for (int i = 1; i < poolSize; i++)
         {
-            AudioSource src = i == 0
-                ? sfxSourcePrefabOrTemplate
-                : Instantiate(sfxSourcePrefabOrTemplate, transform);
+            GameObject sourceObject = new GameObject($"SfxSource_{i}");
+            sourceObject.transform.SetParent(transform, false);
 
-            src.playOnAwake = false;
-            src.loop = false;
-            if (sfxMixerGroup != null) src.outputAudioMixerGroup = sfxMixerGroup;
-
+            AudioSource src = sourceObject.AddComponent<AudioSource>();
+            CopySfxSourceSettings(src);
+            ConfigureSfxSource(src);
             _sfxPool.Add(src);
         }
+    }
+
+    private void CopySfxSourceSettings(AudioSource destination)
+    {
+        destination.outputAudioMixerGroup = sfxSourcePrefabOrTemplate.outputAudioMixerGroup;
+        destination.mute = sfxSourcePrefabOrTemplate.mute;
+        destination.bypassEffects = sfxSourcePrefabOrTemplate.bypassEffects;
+        destination.bypassListenerEffects = sfxSourcePrefabOrTemplate.bypassListenerEffects;
+        destination.bypassReverbZones = sfxSourcePrefabOrTemplate.bypassReverbZones;
+        destination.priority = sfxSourcePrefabOrTemplate.priority;
+        destination.panStereo = sfxSourcePrefabOrTemplate.panStereo;
+        destination.spatialBlend = sfxSourcePrefabOrTemplate.spatialBlend;
+        destination.reverbZoneMix = sfxSourcePrefabOrTemplate.reverbZoneMix;
+        destination.dopplerLevel = sfxSourcePrefabOrTemplate.dopplerLevel;
+        destination.spread = sfxSourcePrefabOrTemplate.spread;
+        destination.rolloffMode = sfxSourcePrefabOrTemplate.rolloffMode;
+        destination.minDistance = sfxSourcePrefabOrTemplate.minDistance;
+        destination.maxDistance = sfxSourcePrefabOrTemplate.maxDistance;
+    }
+
+    private void ConfigureSfxSource(AudioSource source)
+    {
+        source.playOnAwake = false;
+        source.loop = false;
+        if (sfxMixerGroup != null) source.outputAudioMixerGroup = sfxMixerGroup;
     }
 
     private void InitBgmSources()
@@ -160,10 +188,22 @@ public class AudioManager : MonoBehaviour
     /// <summary> AudioClip을 직접 넘겨서 SFX 재생 </summary>
     public void PlaySfx(AudioClip clip, float volumeScale = 1f, float pitch = 1f)
     {
-        if (clip == null || _sfxPool == null || _sfxPool.Count == 0) return;
+        if (clip == null) return;
+        if (_sfxPool == null || _sfxPool.Count == 0) InitSfxPool();
+        if (_sfxPool == null || _sfxPool.Count == 0) return;
 
-        AudioSource src = _sfxPool[_sfxPoolCursor];
-        _sfxPoolCursor = (_sfxPoolCursor + 1) % _sfxPool.Count;
+        AudioSource src = null;
+        for (int i = 0; i < _sfxPool.Count; i++)
+        {
+            AudioSource candidate = _sfxPool[_sfxPoolCursor];
+            _sfxPoolCursor = (_sfxPoolCursor + 1) % _sfxPool.Count;
+            if (candidate == null) continue;
+
+            src = candidate;
+            break;
+        }
+
+        if (src == null) return;
 
         src.pitch = pitch;
         src.volume = Mathf.Clamp01(volumeScale);

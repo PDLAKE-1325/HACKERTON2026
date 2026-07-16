@@ -52,6 +52,10 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private GameObject hitEffectPrefab;
     [SerializeField] private float hitEffectDuration = 0.4f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip normalAttackSound;
+    [SerializeField] private AudioClip stoneAttackSound;
+
     private readonly HashSet<Component> hitTargets = new HashSet<Component>();
     private bool meleeHitboxEnabled;
     private float nextMeleeTime;
@@ -69,6 +73,7 @@ public class PlayerCombat : MonoBehaviour
             return;
 
         nextMeleeTime = Time.time + meleeCooldown;
+        PlayAttackSound(normalAttackSound);
         if (animator != null && !string.IsNullOrEmpty(meleeTrigger))
             animator.SetTrigger(meleeTrigger);
     }
@@ -124,6 +129,13 @@ public class PlayerCombat : MonoBehaviour
             projectileLifetime,
             rangedHitLayers,
             projectileImage);
+        PlayAttackSound(stoneAttackSound);
+    }
+
+    private static void PlayAttackSound(AudioClip clip)
+    {
+        if (clip != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlaySfx(clip);
     }
 
     private void ScanMeleeHitbox()
