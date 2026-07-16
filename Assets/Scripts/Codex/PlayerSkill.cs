@@ -82,9 +82,7 @@ public class PlayerSkill : MonoBehaviour
         if (skillSprite != null)
         {
             skillSprite.gameObject.SetActive(true);
-            Color color = skillSprite.color;
-            color.a = 0f;
-            skillSprite.color = color;
+            skillSprite.color = new Color(0f, 0f, 0f, 0f);
 
             spriteTween?.Kill();
             spriteTween = skillSprite.DOFade(1f, spriteFadeDuration)

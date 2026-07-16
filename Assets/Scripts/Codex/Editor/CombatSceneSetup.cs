@@ -169,6 +169,30 @@ public static class CombatSceneSetup
         Debug.Log("[CombatSceneSetup] Combat scene visuals converted to SpriteRenderer.");
     }
 
+    [MenuItem("Tools/Codex/Configure Skill Overlay")]
+    public static void ConfigureSkillOverlay()
+    {
+        GameObject overlayObject = Require("SkillOverlay");
+        SpriteRenderer overlay = overlayObject.GetComponent<SpriteRenderer>();
+        if (overlay == null)
+            throw new InvalidOperationException("SkillOverlay requires a SpriteRenderer.");
+
+        int stencilMaskLayer = LayerMask.NameToLayer("StencilMask");
+        if (stencilMaskLayer < 0)
+            throw new InvalidOperationException("StencilMask layer does not exist.");
+
+        Undo.RecordObject(overlayObject, "Configure skill overlay layer");
+        Undo.RecordObject(overlay, "Configure skill overlay color");
+        overlayObject.layer = stencilMaskLayer;
+        overlay.color = Color.black;
+        EditorUtility.SetDirty(overlayObject);
+        EditorUtility.SetDirty(overlay);
+
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveOpenScenes();
+        Debug.Log("[CombatSceneSetup] SkillOverlay configured as black on StencilMask layer.");
+    }
+
     private static void ConfigurePhysics(GameObject player, GameObject enemy, PhysicsMaterial2D material)
     {
         ConfigureBody(player.GetComponent<Rigidbody2D>());
@@ -361,10 +385,11 @@ public static class CombatSceneSetup
     {
         SpriteRenderer overlay = Require("SkillOverlay").GetComponent<SpriteRenderer>();
         overlay.sprite = sprite;
-        overlay.color = new Color(1f, 1f, 1f, 0f);
+        overlay.color = Color.black;
         overlay.sortingOrder = 20;
         overlay.transform.localPosition = new Vector3(0f, 0f, -0.6f);
         overlay.transform.localScale = new Vector3(4f, 3f, 1f);
+        overlay.gameObject.layer = LayerMask.NameToLayer("StencilMask");
         overlay.gameObject.SetActive(false);
         EditorUtility.SetDirty(overlay);
     }

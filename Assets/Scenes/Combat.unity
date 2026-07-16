@@ -475,7 +475,7 @@ GameObject:
   m_Component:
   - component: {fileID: 421256010}
   - component: {fileID: 421256011}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: SkillOverlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -547,7 +547,7 @@ SpriteRenderer:
   m_SortingOrder: 20
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6455720418409445183, guid: efcada2ad3a527742a4a5d8fb5072b6e, type: 2}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
