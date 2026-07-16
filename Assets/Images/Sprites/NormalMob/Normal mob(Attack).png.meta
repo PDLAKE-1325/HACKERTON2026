@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: f5e0781023e884f859a88d935a0c8932
+guid: fe0411853f0254954afdd73e5653be76
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8684367714715325867
-    second: player_wall_0
+      213: 5678384283763357643
+    second: Normal mob(Attack)_0
+  - first:
+      213: -6997411251662007089
+    second: Normal mob(Attack)_1
+  - first:
+      213: -1980106818749521090
+    second: Normal mob(Attack)_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +43,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,12 +52,12 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 50
+  spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -100,13 +106,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: player_wall_0
+      name: Normal mob(Attack)_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 512
-        height: 512
+        x: 26
+        y: 34
+        width: 156
+        height: 170
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +121,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ba55a7ebc62158870800000000000000
-      internalID: 8684367714715325867
+      spriteID: bc730e3bb6cadce40800000000000000
+      internalID: 5678384283763357643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Normal mob(Attack)_1
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 34
+        width: 181
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc45d5d5a8334ee90800000000000000
+      internalID: -6997411251662007089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Normal mob(Attack)_2
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 32
+        width: 196
+        height: 142
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e332b13e65f3584e0800000000000000
+      internalID: -1980106818749521090
       vertices: []
       indices: 
       edges: []
@@ -125,7 +175,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +185,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      player_wall_0: 8684367714715325867
+      Normal mob(Attack)_0: 5678384283763357643
+      Normal mob(Attack)_1: -6997411251662007089
+      Normal mob(Attack)_2: -1980106818749521090
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
