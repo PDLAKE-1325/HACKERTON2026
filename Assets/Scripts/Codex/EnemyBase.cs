@@ -442,11 +442,19 @@ public class EnemyBase : MonoBehaviour, IDamageable, IEnemy, IHealthTarget
 
         if (deathParticlePrefab != null)
         {
-            GameObject particle = Instantiate(
+            GameObject particleObject = Instantiate(
                 deathParticlePrefab,
                 transform.position + deathParticleOffset,
                 Quaternion.identity);
-            Destroy(particle, deathParticleLifetime);
+            foreach (ParticleSystem particle in particleObject.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ParticleSystem.MainModule main = particle.main;
+                main.useUnscaledTime = true;
+                particle.Clear(true);
+                particle.Play(true);
+            }
+
+            Destroy(particleObject, deathParticleLifetime);
         }
 
         Died?.Invoke(this);
