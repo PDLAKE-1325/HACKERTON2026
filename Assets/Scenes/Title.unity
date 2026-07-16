@@ -731,7 +731,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d910e44fc82b49838b92bf3a3e44528, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleMenu
-  nextSceneName: 
+  nextSceneName: NPC
   credit: {fileID: 1540685740}
 --- !u!1 &791097385
 GameObject:
@@ -900,7 +900,7 @@ GameObject:
   - component: {fileID: 1172959012}
   - component: {fileID: 1172959011}
   m_Layer: 5
-  m_Name: StartBtn (1)
+  m_Name: Crediy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
