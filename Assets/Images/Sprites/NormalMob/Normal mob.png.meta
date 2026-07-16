@@ -1,22 +1,10 @@
 fileFormatVersion: 2
-guid: 48f6a7d3febff4d41be948108914109c
+guid: 1dc254c35d65944238b19839ca9bd1b7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5890861698395885179
-    second: player_axe_0
-  - first:
-      213: 3139730763250815194
-    second: player_axe_1
-  - first:
-      213: 224760831688064903
-    second: player_axe_2
-  - first:
-      213: -8396108646338965404
-    second: player_axe_3
-  - first:
-      213: -1490187771194903531
-    second: player_axe_4
+      213: -8544603874815125922
+    second: Normal mob_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -112,67 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: player_axe_0
+      name: Normal mob_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 256
-        height: 256
+        x: 103
+        y: 67
+        width: 302
+        height: 330
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b7e47d9e08b80c150800000000000000
-      internalID: 5890861698395885179
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: player_axe_1
-      rect:
-        serializedVersion: 2
-        x: 256
-        y: 0
-        width: 256
-        height: 256
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: ad05ee18e70929b20800000000000000
-      internalID: 3139730763250815194
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: player_axe_2
-      rect:
-        serializedVersion: 2
-        x: 512
-        y: 0
-        width: 256
-        height: 256
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 78f303c19c28e1300800000000000000
-      internalID: 224760831688064903
+      spriteID: e56d73f0c087b6980800000000000000
+      internalID: -8544603874815125922
       vertices: []
       indices: 
       edges: []
@@ -181,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: e77516e52c60f4d0aa41586c237d1a93
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -189,13 +133,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":256.0,"y":256.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      player_axe_0: 5890861698395885179
-      player_axe_1: 3139730763250815194
-      player_axe_2: 224760831688064903
+      Normal mob_0: -8544603874815125922
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
