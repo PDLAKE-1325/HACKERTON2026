@@ -36,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Animation")]
     [SerializeField] private string moveBool = "Move";
+    [SerializeField] private string wallGripBool = "WallGrip";
 
     private float moveInput;
     private float defaultGravityScale;
@@ -174,6 +175,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         SetMoveAnimation(false);
+        SetWallGripAnimation(false);
     }
 
     public void ApplyKnockback(Vector2 velocity, float controlLockDuration)
@@ -193,6 +195,7 @@ public class PlayerMovement : MonoBehaviour
         knockbackControlLockedUntil = Time.time + Mathf.Max(0f, controlLockDuration);
         body.linearVelocity = velocity;
         SetMoveAnimation(false);
+        SetWallGripAnimation(false);
     }
 
     private void UpdateEnvironmentState()
@@ -212,12 +215,19 @@ public class PlayerMovement : MonoBehaviour
             Time.time >= knockbackControlLockedUntil &&
             Mathf.Abs(body.linearVelocity.x) > 0.1f;
         SetMoveAnimation(isMoving);
+        SetWallGripAnimation(isWallGripping);
     }
 
     private void SetMoveAnimation(bool value)
     {
         if (animator != null && !string.IsNullOrEmpty(moveBool))
             animator.SetBool(moveBool, value);
+    }
+
+    private void SetWallGripAnimation(bool value)
+    {
+        if (animator != null && !string.IsNullOrEmpty(wallGripBool))
+            animator.SetBool(wallGripBool, value);
     }
 
     private void TryBeginWallGrip()
@@ -232,6 +242,8 @@ public class PlayerMovement : MonoBehaviour
         wallGripRemaining = wallGripDuration;
         body.gravityScale = 0f;
         body.linearVelocity = Vector2.zero;
+        SetMoveAnimation(false);
+        SetWallGripAnimation(true);
     }
 
     private void ReleaseWall(bool jumpUp)
@@ -241,6 +253,7 @@ public class PlayerMovement : MonoBehaviour
 
         isWallGripping = false;
         body.gravityScale = defaultGravityScale;
+        SetWallGripAnimation(false);
 
         float regrabDelay = wallRegrabDelay;
         if (jumpUp)

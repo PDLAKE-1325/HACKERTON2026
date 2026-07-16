@@ -194,8 +194,8 @@ public static class CombatSceneSetup
         Debug.Log("[CombatSceneSetup] SkillOverlay configured as black on StencilMask layer.");
     }
 
-    [MenuItem("Tools/Codex/Configure Player Move Animation")]
-    public static void ConfigurePlayerMoveAnimation()
+    [MenuItem("Tools/Codex/Configure Player Movement Animations")]
+    public static void ConfigurePlayerMovementAnimations()
     {
         if (EditorSceneManager.GetActiveScene().name != "Combat")
             throw new InvalidOperationException("Combat scene must be active.");
@@ -211,7 +211,25 @@ public static class CombatSceneSetup
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
         AssetDatabase.SaveAssets();
-        Debug.Log("[CombatSceneSetup] Player Move animation configured.");
+        Debug.Log("[CombatSceneSetup] Player movement animations configured.");
+    }
+
+    [MenuItem("Tools/Codex/Configure Player Wall Grip Animation")]
+    public static void ConfigurePlayerWallGripAnimation()
+    {
+        EnsureFolder();
+
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(
+            $"{GeneratedRoot}/PlayerCombat.controller");
+        if (controller == null)
+            throw new InvalidOperationException("PlayerCombat.controller does not exist.");
+
+        AnimationClip wallGripClip = CreateClip("PlayerWallGrip", 0.3f, null, true);
+        AddWallGripState(controller, wallGripClip);
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("[CombatSceneSetup] Player wall grip animation configured.");
     }
 
     private static void ConfigurePhysics(GameObject player, GameObject enemy, PhysicsMaterial2D material)
@@ -447,6 +465,7 @@ public static class CombatSceneSetup
 
         AnimationClip playerIdle = CreateClip("PlayerIdle", 0.2f, null, true);
         AnimationClip playerMove = CreateClip("PlayerMove", 0.3f, null, true);
+        AnimationClip playerWallGrip = CreateClip("PlayerWallGrip", 0.3f, null, true);
         AnimationClip playerMelee = CreateClip("PlayerMelee", 0.24f, new[]
         {
             new AnimationEvent { time = 0.06f, functionName = "EnableAttackHitbox" },
@@ -466,13 +485,17 @@ public static class CombatSceneSetup
                 new TriggerState("Hit", playerHit, true),
                 new TriggerState("Death", playerDeath, false)
             });
-        AddMoveState(playerController, playerMove);
+        AddMovementStates(playerController, playerMove, playerWallGrip);
         player.GetComponent<Animator>().runtimeAnimatorController = playerController;
     }
 
-    private static void AddMoveState(AnimatorController controller, AnimationClip moveClip)
+    private static void AddMovementStates(
+        AnimatorController controller,
+        AnimationClip moveClip,
+        AnimationClip wallGripClip)
     {
         controller.AddParameter("Move", AnimatorControllerParameterType.Bool);
+        controller.AddParameter("WallGrip", AnimatorControllerParameterType.Bool);
 
         AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
         AnimatorState idle = stateMachine.states
@@ -491,6 +514,41 @@ public static class CombatSceneSetup
         stopMoving.duration = 0f;
         stopMoving.AddCondition(AnimatorConditionMode.IfNot, 0f, "Move");
 
+        AddWallGripState(controller, wallGripClip);
+
+        EditorUtility.SetDirty(controller);
+    }
+
+    private static void AddWallGripState(AnimatorController controller, AnimationClip wallGripClip)
+    {
+        if (!controller.parameters.Any(parameter => parameter.name == "WallGrip"))
+            controller.AddParameter("WallGrip", AnimatorControllerParameterType.Bool);
+
+        AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
+        AnimatorState idle = stateMachine.states
+            .Select(childState => childState.state)
+            .First(state => state.name == "Idle");
+        AnimatorState wallGrip = stateMachine.states
+            .Select(childState => childState.state)
+            .FirstOrDefault(state => state.name == "WallGrip");
+
+        if (wallGrip == null)
+        {
+            wallGrip = stateMachine.AddState("WallGrip");
+
+            AnimatorStateTransition startWallGrip = stateMachine.AddAnyStateTransition(wallGrip);
+            startWallGrip.hasExitTime = false;
+            startWallGrip.duration = 0f;
+            startWallGrip.canTransitionToSelf = false;
+            startWallGrip.AddCondition(AnimatorConditionMode.If, 0f, "WallGrip");
+
+            AnimatorStateTransition stopWallGrip = wallGrip.AddTransition(idle);
+            stopWallGrip.hasExitTime = false;
+            stopWallGrip.duration = 0f;
+            stopWallGrip.AddCondition(AnimatorConditionMode.IfNot, 0f, "WallGrip");
+        }
+
+        wallGrip.motion = wallGripClip;
         EditorUtility.SetDirty(controller);
     }
 
