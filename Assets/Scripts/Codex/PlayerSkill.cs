@@ -77,6 +77,8 @@ public class PlayerSkill : MonoBehaviour
         isActive = true;
         canAcceptTargetClick = !InputManager.Instance.OnLMB();
         InputManager.Instance.SetInputAllowed(false);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.SetMuffled(true);
         if (resonanceStack != null)
             resonanceStack.SetSkillActive(true);
 
@@ -210,6 +212,8 @@ public class PlayerSkill : MonoBehaviour
             {
                 if (InputManager.Instance != null)
                     InputManager.Instance.SetInputAllowed(true);
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.SetMuffled(false);
             });
 
         if (skillSprite != null)
@@ -227,10 +231,15 @@ public class PlayerSkill : MonoBehaviour
 
     private void OnDestroy()
     {
+        bool hadSlowState = isActive ||
+            (timeScaleTween != null && timeScaleTween.IsActive());
         timeScaleTween?.Kill();
         spriteTween?.Kill();
 
-        if (!isActive)
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.SetMuffled(false);
+
+        if (!hadSlowState)
             return;
 
         isActive = false;
