@@ -28,9 +28,8 @@ public class VPlayerMove : MonoBehaviour
 
     void SetAnimationConditions()
     {
-        animator.SetBool("move", rb.linearVelocityX != 0);
+        animator.SetBool("Move", rb.linearVelocityX != 0);
 
-        animator.SetBool("jump", rb.linearVelocityY != 0);
     }
     [SerializeField] string nextSceneName;
     void OnTriggerEnter2D(Collider2D collision)
@@ -45,14 +44,14 @@ public class VPlayerMove : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        // animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
         Movement();
-        // SetAnimationConditions();
+        SetAnimationConditions();
     }
     #endregion
 }
