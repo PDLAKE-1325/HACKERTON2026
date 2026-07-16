@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public static class CombatSceneSetup
@@ -230,6 +231,91 @@ public static class CombatSceneSetup
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[CombatSceneSetup] Player wall grip animation configured.");
+    }
+
+    [MenuItem("Tools/Codex/Configure Combat Skill Cooldown UI")]
+    public static void ConfigureCombatSkillCooldownUi()
+    {
+        const string combatScenePath = "Assets/Scenes/Combat.unity";
+        Scene previousActiveScene = SceneManager.GetActiveScene();
+        Scene combatScene = SceneManager.GetSceneByPath(combatScenePath);
+        bool openedForSetup = !combatScene.isLoaded;
+
+        if (openedForSetup)
+            combatScene = EditorSceneManager.OpenScene(combatScenePath, OpenSceneMode.Additive);
+
+        try
+        {
+            GameObject canvasObject = RequireInScene(combatScene, "GameplayCanvas");
+            PlayerSkill playerSkill = RequireInScene(combatScene, "Player").GetComponent<PlayerSkill>();
+            if (playerSkill == null)
+                throw new InvalidOperationException("Combat Player requires PlayerSkill.");
+
+            GameObject root = FindInScene(combatScene, "SkillCooldownUI");
+            if (root == null)
+            {
+                root = new GameObject("SkillCooldownUI", typeof(RectTransform), typeof(Image));
+                root.transform.SetParent(canvasObject.transform, false);
+                root.layer = LayerMask.NameToLayer("UI");
+            }
+
+            RectTransform rootRect = root.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0f, 1f);
+            rootRect.anchorMax = new Vector2(0f, 1f);
+            rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.anchoredPosition = new Vector2(40f, -82f);
+            rootRect.sizeDelta = new Vector2(360f, 46f);
+
+            Image background = root.GetComponent<Image>();
+            background.color = new Color(0.03f, 0.06f, 0.1f, 0.9f);
+            background.raycastTarget = false;
+
+            GameObject fillObject = GetOrCreateUiObject(root.transform, "CooldownFill", typeof(Image));
+            RectTransform fillRect = fillObject.GetComponent<RectTransform>();
+            Stretch(fillRect, 4f);
+            Image fill = fillObject.GetComponent<Image>();
+            fill.color = new Color(0.15f, 0.9f, 1f, 0.9f);
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fill.fillAmount = 1f;
+            fill.raycastTarget = false;
+
+            GameObject labelObject = GetOrCreateUiObject(root.transform, "Label", typeof(Text));
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            SetTextRect(labelRect, 12f, 0f, 220f, 46f);
+            Text label = labelObject.GetComponent<Text>();
+            ConfigureCooldownText(label, "슬로우 [SPACE]", TextAnchor.MiddleLeft, 24);
+
+            GameObject statusObject = GetOrCreateUiObject(root.transform, "Status", typeof(Text));
+            RectTransform statusRect = statusObject.GetComponent<RectTransform>();
+            SetTextRect(statusRect, 230f, 0f, 118f, 46f);
+            Text status = statusObject.GetComponent<Text>();
+            ConfigureCooldownText(status, "준비", TextAnchor.MiddleRight, 22);
+
+            SkillCooldownUI cooldownUi = root.GetComponent<SkillCooldownUI>();
+            if (cooldownUi == null)
+                cooldownUi = root.AddComponent<SkillCooldownUI>();
+            SetObjectReferences(cooldownUi, new Dictionary<string, UnityEngine.Object>
+            {
+                { "playerSkill", playerSkill },
+                { "cooldownFill", fill },
+                { "statusText", status }
+            });
+
+            EditorUtility.SetDirty(root);
+            EditorSceneManager.MarkSceneDirty(combatScene);
+            EditorSceneManager.SaveScene(combatScene);
+            Debug.Log("[CombatSceneSetup] Combat skill cooldown UI configured.");
+        }
+        finally
+        {
+            if (openedForSetup && combatScene.isLoaded)
+                EditorSceneManager.CloseScene(combatScene, true);
+
+            if (previousActiveScene.isLoaded)
+                SceneManager.SetActiveScene(previousActiveScene);
+        }
     }
 
     private static void ConfigurePhysics(GameObject player, GameObject enemy, PhysicsMaterial2D material)
@@ -877,6 +963,64 @@ public static class CombatSceneSetup
             { "zoneCamera", camera }
         });
         SetLayerMask(cameraZone, "playerLayer", LayerMask.GetMask("Player"));
+    }
+
+    private static GameObject GetOrCreateUiObject(Transform parent, string name, Type componentType)
+    {
+        Transform existing = parent.Find(name);
+        if (existing != null)
+            return existing.gameObject;
+
+        GameObject created = new GameObject(name, typeof(RectTransform), componentType);
+        created.transform.SetParent(parent, false);
+        created.layer = LayerMask.NameToLayer("UI");
+        return created;
+    }
+
+    private static void Stretch(RectTransform rect, float inset)
+    {
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = new Vector2(inset, inset);
+        rect.offsetMax = new Vector2(-inset, -inset);
+    }
+
+    private static void SetTextRect(RectTransform rect, float x, float y, float width, float height)
+    {
+        rect.anchorMin = new Vector2(0f, 0.5f);
+        rect.anchorMax = new Vector2(0f, 0.5f);
+        rect.pivot = new Vector2(0f, 0.5f);
+        rect.anchoredPosition = new Vector2(x, y);
+        rect.sizeDelta = new Vector2(width, height);
+    }
+
+    private static void ConfigureCooldownText(Text text, string value, TextAnchor alignment, int fontSize)
+    {
+        text.text = value;
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.fontSize = fontSize;
+        text.fontStyle = FontStyle.Bold;
+        text.alignment = alignment;
+        text.color = Color.white;
+        text.raycastTarget = false;
+        EditorUtility.SetDirty(text);
+    }
+
+    private static GameObject FindInScene(Scene scene, string name)
+    {
+        return scene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+            .Select(transform => transform.gameObject)
+            .FirstOrDefault(candidate => candidate.name == name);
+    }
+
+    private static GameObject RequireInScene(Scene scene, string name)
+    {
+        GameObject found = FindInScene(scene, name);
+        if (found == null)
+            throw new InvalidOperationException(
+                $"Required object '{name}' was not found in scene '{scene.name}'.");
+        return found;
     }
 
     private static void SetObjectReferences(

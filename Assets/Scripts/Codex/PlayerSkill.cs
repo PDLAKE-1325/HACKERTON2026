@@ -33,17 +33,16 @@ public class PlayerSkill : MonoBehaviour
     public float FinisherDamage => finisherDamage +
         (resonanceStack != null ? resonanceStack.BonusDamage : 0f);
     public bool IsActive => isActive;
+    public float CooldownDuration => Mathf.Max(0f, cooldown);
+    public float CooldownRemaining => Mathf.Max(0f, nextUseTime - Time.unscaledTime);
+    public float CooldownProgress => CooldownDuration <= 0f
+        ? 1f
+        : 1f - CooldownRemaining / CooldownDuration;
 
     private void Update()
     {
         if (!isActive || InputManager.Instance == null)
             return;
-
-        if (!InputManager.Instance.SpecialAbilityHeld)
-        {
-            FinishAndStartCooldown();
-            return;
-        }
 
         bool leftMouseHeld = InputManager.Instance.OnLMB();
         if (!leftMouseHeld)
@@ -57,6 +56,17 @@ public class PlayerSkill : MonoBehaviour
 
         canAcceptTargetClick = false;
         TryExecuteTargetAtMouse();
+    }
+
+    public void Toggle()
+    {
+        if (isActive)
+        {
+            FinishAndStartCooldown();
+            return;
+        }
+
+        TryActivate();
     }
 
     public void TryActivate()

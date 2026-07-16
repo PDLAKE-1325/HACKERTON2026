@@ -34,6 +34,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float dashDuration = 0.16f;
     [SerializeField] private float dashCooldown = 0.8f;
 
+    [Header("Fall Respawn")]
+    [SerializeField] private float fallResetY = -20f;
+
     [Header("Animation")]
     [SerializeField] private string moveBool = "Move";
     [SerializeField] private string wallGripBool = "WallGrip";
@@ -51,12 +54,15 @@ public class PlayerMovement : MonoBehaviour
     private bool isWallGripping;
     private bool isDashing;
     private Coroutine dashCoroutine;
+    private Vector3 startingPosition;
 
     public int FacingDirection => facingDirection;
     public bool IsDashing => isDashing;
 
     private void Awake()
     {
+        startingPosition = transform.position;
+
         if (bodyCollider == null)
             bodyCollider = GetComponent<Collider2D>();
 
@@ -71,6 +77,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (body == null)
             return;
+
+        if (transform.position.y < fallResetY)
+        {
+            ReturnToStartingPosition();
+            return;
+        }
 
         UpdateEnvironmentState();
 
@@ -196,6 +208,18 @@ public class PlayerMovement : MonoBehaviour
         body.linearVelocity = velocity;
         SetMoveAnimation(false);
         SetWallGripAnimation(false);
+    }
+
+    private void ReturnToStartingPosition()
+    {
+        StopImmediately();
+        transform.position = startingPosition;
+
+        if (body == null)
+            return;
+
+        body.position = new Vector2(startingPosition.x, startingPosition.y);
+        body.angularVelocity = 0f;
     }
 
     private void UpdateEnvironmentState()
