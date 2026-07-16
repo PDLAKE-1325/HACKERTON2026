@@ -1955,7 +1955,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   teleportOffset: 1.25
-  finisherDamage: 30
+  finisherDamage: 50
   cooldown: 5
   skillTimeScale: 0.08
   slowDownDuration: 0.18
@@ -2032,13 +2032,13 @@ MonoBehaviour:
   meleeHitboxShape: 0
   meleeBoxSize: {x: 1.6, y: 1}
   meleeCircleRadius: 0.8
-  meleeDamage: 20
+  meleeDamage: 30
   meleeKnockback: 8
   meleeCooldown: 0.4
   meleeTrigger: Melee
   meleeHitShakeIntensity: 1
   meleeHitShakeDuration: 0.12
-  rangedDamage: 12
+  rangedDamage: 15
   rangedKnockback: 5
   rangedCooldown: 0.45
   rangedTrigger: Shoot
@@ -3040,7 +3040,7 @@ Transform:
   m_GameObject: {fileID: 1948725789}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.688, y: -0.137, z: 0}
+  m_LocalPosition: {x: 0.95, y: -0.137, z: 0}
   m_LocalScale: {x: 1, y: 0.6666667, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
