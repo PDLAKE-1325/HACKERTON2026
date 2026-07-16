@@ -200,7 +200,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7146292101862730982}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -249,21 +249,21 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: -0.29975682}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 4.180574, y: 4.12}
+    oldSize: {x: 5.1807113, y: 5.12}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.2, y: 1.4}
+  m_Size: {x: 2.35, y: 3.1204863}
   m_EdgeRadius: 0
 --- !u!95 &752647563372337688
 Animator:
@@ -275,7 +275,7 @@ Animator:
   m_GameObject: {fileID: 7146292101862730982}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 83b142b6aeede8f48b7a1ed1598c086a, type: 2}
+  m_Controller: {fileID: 9100000, guid: 2bd6a6f92a1ac40279b2c3325e6158d2, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -342,8 +342,8 @@ MonoBehaviour:
   moveBool: Move
   markDuration: 20
   markerPrefab: {fileID: 302965178560278234, guid: 40d947b15450671409b0977cbe256604, type: 3}
-  finishableMarkSprite: {fileID: -3884330180731820946, guid: e7397ffb666034e4cb34180745f26592, type: 2}
-  unavailableMarkSprite: {fileID: -2894423884803931208, guid: 29c63ec6640d1964eaad5dd24d533f6f, type: 2}
+  finishableMarkSprite: {fileID: 21300000, guid: 3ef15be4f0ff64c6b8ec6d51828fca13, type: 3}
+  unavailableMarkSprite: {fileID: 21300000, guid: c8f538f5dc1f843e5b1daf14c05d6ec0, type: 3}
   markerLocalOffset: {x: 0, y: 1.5, z: 0}
   finisherDamageFallback: 999
   rockPrefab: {fileID: 8403977691286496742, guid: af0d29756ecebcb459656d70000a9214, type: 3}
